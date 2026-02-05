@@ -10,12 +10,34 @@
     "frontendDist": "../dist"
   },
   "app": {
+    "macOSPrivateApi": true,
     "withGlobalTauri": true,
     "windows": [
       {
-        "label": "daemon",
-        "title": "LazyTrans",
-        "url": "index.html",
+        "label": "translator",
+        "title": "翻译",
+        "url": "index.html/#/",
+        "width": 450,
+        "height": 350,
+        "minWidth": 350,
+        "minHeight": 250,
+        "alwaysOnTop": true,
+        "transparent": true,
+        "decorations": false,
+        "acceptFirstMouse": true,
+        "skipTaskbar": true,
+        "visible": false
+      },
+      {
+        "label": "settings",
+        "title": "设置 - LazyTrans",
+        "url": "index.html/#/settings",
+        "width": 900,
+        "height": 650,
+        "resizable": true,
+        "decorations": true,
+        "alwaysOnTop": false,
+        "center": true,
         "visible": false
       }
     ],

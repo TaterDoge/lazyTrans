@@ -4,7 +4,7 @@ export type WindowConfig = WindowOptions & { url: string };
 
 export const WINDOW_CONFIG: Record<string, WindowConfig> = {
   translator: {
-    url: "index.html",
+    url: "/",
     title: "翻译",
     width: 450,
     height: 350,
@@ -13,34 +13,23 @@ export const WINDOW_CONFIG: Record<string, WindowConfig> = {
     resizable: true,
     decorations: false,
     transparent: true,
-    alwaysOnTop: true,
+    alwaysOnTop: false,
     skipTaskbar: true,
     focus: true,
     visible: true,
     center: true,
   },
   settings: {
-    url: "index.html",
+    url: "/settings",
     title: "设置 - LazyTrans",
     width: 900,
     height: 650,
     resizable: true,
     decorations: true,
-    alwaysOnTop: true,
+    alwaysOnTop: false,
     focus: true,
     visible: true,
     center: true,
-  },
-  screenshot: {
-    url: "index.html",
-    title: "截图翻译",
-    decorations: false,
-    transparent: true,
-    alwaysOnTop: true,
-    skipTaskbar: true,
-    resizable: false,
-    focus: true,
-    visible: false,
   },
 };
 

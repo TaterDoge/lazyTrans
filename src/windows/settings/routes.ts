@@ -1,9 +1,11 @@
+const settingsBase = "/settings";
+
 export const settingsRoutes = {
-  general: "/",
-  appearance: "/appearance",
-  shortcuts: "/shortcuts",
-  language: "/language",
-  about: "/about",
+  general: settingsBase,
+  appearance: `${settingsBase}/appearance`,
+  shortcuts: `${settingsBase}/shortcuts`,
+  language: `${settingsBase}/language`,
+  about: `${settingsBase}/about`,
 } as const;
 
 export type SettingsRoute =
@@ -17,9 +19,9 @@ export interface SettingsMenuItem {
 }
 
 export const settingsMenuItems: SettingsMenuItem[] = [
-  { id: "general", label: "通用", path: "/" },
-  { id: "appearance", label: "外观", path: "/appearance" },
-  { id: "shortcuts", label: "快捷键", path: "/shortcuts" },
-  { id: "language", label: "语言", path: "/language" },
-  { id: "about", label: "关于", path: "/about" },
+  { id: "general", label: "通用", path: settingsRoutes.general },
+  { id: "appearance", label: "外观", path: settingsRoutes.appearance },
+  { id: "shortcuts", label: "快捷键", path: settingsRoutes.shortcuts },
+  { id: "language", label: "语言", path: settingsRoutes.language },
+  { id: "about", label: "关于", path: settingsRoutes.about },
 ];

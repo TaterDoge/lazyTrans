@@ -1,12 +1,21 @@
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { createSignal } from "solid-js";
+
+const COMMAND = {
+  HIDE_WINDOW: "plugin:custom-window|hide_window",
+};
 
 function TranslatorApp() {
   const [text, setText] = createSignal("");
-  const currentWindow = getCurrentWindow();
+  const currentWindow = getCurrentWebviewWindow();
+
   const handleClose = () => {
-    currentWindow.hide().catch(console.error);
+    invoke(COMMAND.HIDE_WINDOW)
+      .catch(() => currentWindow.hide())
+      .catch(console.error);
   };
+
   const handleDragStart = (event: PointerEvent) => {
     if (event.button !== 0) {
       return;

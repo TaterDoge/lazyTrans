@@ -1,9 +1,11 @@
 import { A, type RouteSectionProps, useLocation } from "@solidjs/router";
 import { For } from "solid-js";
+import { useTray } from "../../hooks/use-tray";
 import { settingsMenuItems } from "./routes";
 
 function SettingsLayout(props: RouteSectionProps) {
   const location = useLocation();
+  useTray();
 
   return (
     <div class="flex h-screen bg-gray-50 dark:bg-gray-900">
@@ -28,6 +30,7 @@ function SettingsLayout(props: RouteSectionProps) {
                           ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400"
                           : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
                       }`}
+                      end
                       href={item.path}
                     >
                       {item.label}

@@ -1,78 +1,52 @@
-import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { WINDOW_CONFIG, type WindowLabel } from "../config/window.config";
+import { invoke } from "@tauri-apps/api/core";
+import { emit } from "@tauri-apps/api/event";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import type { WindowLabel } from "../config/window.config";
+import { LISTEN_KEY } from "../constants";
 
-/**
- * 获取或创建窗口实例
- * 如果窗口已存在则返回现有窗口，否则创建新窗口
- * @param label - 窗口标识符
- * @returns 窗口实例
- */
-export async function ensureWindow(label: WindowLabel) {
-  const win = await WebviewWindow.getByLabel(label);
-  return win ?? new WebviewWindow(label, WINDOW_CONFIG[label]);
-}
+const COMMAND = {
+  SHOW_WINDOW: "plugin:custom-window|show_window",
+  HIDE_WINDOW: "plugin:custom-window|hide_window",
+  SET_ALWAYS_ON_TOP: "plugin:custom-window|set_always_on_top",
+  SET_TASKBAR_VISIBILITY: "plugin:custom-window|set_taskbar_visibility",
+};
 
-/**
- * 显示窗口并聚焦
- * 如果窗口不存在则自动创建，然后显示并设置焦点
- * @param label - 窗口标识符
- * @returns 窗口实例
- */
-export async function showWindow(label: WindowLabel) {
-  const win = await ensureWindow(label);
-  await win.show();
-  await win.setFocus();
-  return win;
-}
-
-/**
- * 隐藏窗口
- * 如果窗口存在则将其隐藏
- * @param label - 窗口标识符
- */
-export async function hideWindow(label: WindowLabel) {
-  const win = await WebviewWindow.getByLabel(label);
-  if (win) {
-    await win.hide();
+export function showWindow(label?: WindowLabel) {
+  if (label) {
+    emit(LISTEN_KEY.SHOW_WINDOW, label);
+  } else {
+    invoke(COMMAND.SHOW_WINDOW);
   }
 }
 
-/**
- * 关闭窗口
- * 如果窗口存在则将其关闭
- * @param label - 窗口标识符
- */
-export async function closeWindow(label: WindowLabel) {
-  const win = await WebviewWindow.getByLabel(label);
-  if (win) {
-    await win.close();
+export function hideWindow(label?: WindowLabel) {
+  if (label) {
+    emit(LISTEN_KEY.HIDE_WINDOW, label);
+  } else {
+    invoke(COMMAND.HIDE_WINDOW);
   }
 }
 
-/**
- * 切换窗口显示状态
- * 如果窗口可见则隐藏，否则显示并聚焦
- * @param label - 窗口标识符
- */
-export async function toggleWindow(label: WindowLabel) {
-  const win = await ensureWindow(label);
-  const visible = await win.isVisible();
+export function setAlwaysOnTop(alwaysOnTop: boolean) {
+  invoke(COMMAND.SET_ALWAYS_ON_TOP, { alwaysOnTop });
+}
+
+export async function toggleWindowVisible(label?: WindowLabel) {
+  const appWindow = getCurrentWebviewWindow();
+
+  if (appWindow.label !== label) {
+    return;
+  }
+
+  const visible = await appWindow.isVisible();
 
   if (visible) {
-    await win.hide();
-  } else {
-    await win.unminimize();
-    await win.show();
-    await win.setFocus();
+    return hideWindow(label);
   }
+
+  return showWindow(label);
 }
 
-/**
- * 检查窗口是否存在
- * @param label - 窗口标识符
- * @returns 窗口是否存在
- */
-export async function hasWindow(label: WindowLabel) {
-  const win = await WebviewWindow.getByLabel(label);
-  return win !== null;
+export function setTaskbarVisibility(visible: boolean) {
+  invoke(COMMAND.SET_TASKBAR_VISIBILITY, { visible });
 }
