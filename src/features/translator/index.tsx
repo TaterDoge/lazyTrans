@@ -11,6 +11,11 @@ function TranslatorApp() {
   };
 
   onMount(() => {
+    const unlistenPromise = currentWindow.onCloseRequested((event) => {
+      event.preventDefault();
+      handleClose();
+    });
+
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key.toLowerCase() === "w" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
@@ -20,9 +25,10 @@ function TranslatorApp() {
     };
 
     window.addEventListener("keydown", onKeyDown, { capture: true });
-    onCleanup(() =>
-      window.removeEventListener("keydown", onKeyDown, { capture: true })
-    );
+    onCleanup(() => {
+      unlistenPromise.then((unlisten) => unlisten());
+      window.removeEventListener("keydown", onKeyDown, { capture: true });
+    });
   });
 
   const handleDragStart = (event: PointerEvent) => {

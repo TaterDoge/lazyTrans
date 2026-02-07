@@ -2,7 +2,7 @@ import { defaultWindowIcon } from "@tauri-apps/api/app";
 import { Menu, MenuItem } from "@tauri-apps/api/menu";
 import { TrayIcon } from "@tauri-apps/api/tray";
 import { exit } from "@tauri-apps/plugin-process";
-import { onCleanup, onMount } from "solid-js";
+import { onMount } from "solid-js";
 import { showWindow } from "../utils/window";
 
 const TRAY_ID = "LAZYTRANS_TRAY";
@@ -54,10 +54,6 @@ export function useTray() {
 
   onMount(() => {
     initTray();
-  });
-
-  onCleanup(() => {
-    console.log("[useTray] Hook cleanup");
   });
 
   return { initTray };

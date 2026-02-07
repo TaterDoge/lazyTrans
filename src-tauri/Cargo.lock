@@ -1824,7 +1824,6 @@ dependencies = [
  "serde_json",
  "tauri",
  "tauri-build",
- "tauri-plugin-custom-window",
  "tauri-plugin-opener",
  "tauri-plugin-process",
 ]
@@ -3648,15 +3647,6 @@ dependencies = [
  "tauri-utils",
  "toml 0.9.11+spec-1.1.0",
  "walkdir",
-]
-
-[[package]]
-name = "tauri-plugin-custom-window"
-version = "0.1.0"
-dependencies = [
- "serde",
- "tauri",
- "tauri-plugin",
 ]
 
 [[package]]
