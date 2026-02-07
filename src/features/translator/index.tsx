@@ -1,20 +1,29 @@
-import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { createSignal } from "solid-js";
-
-const COMMAND = {
-  HIDE_WINDOW: "plugin:custom-window|hide_window",
-};
+import { createSignal, onCleanup, onMount } from "solid-js";
+import { hideWindow } from "../../utils/window";
 
 function TranslatorApp() {
   const [text, setText] = createSignal("");
   const currentWindow = getCurrentWebviewWindow();
 
   const handleClose = () => {
-    invoke(COMMAND.HIDE_WINDOW)
-      .catch(() => currentWindow.hide())
-      .catch(console.error);
+    hideWindow();
   };
+
+  onMount(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() === "w" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleClose();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown, { capture: true });
+    onCleanup(() =>
+      window.removeEventListener("keydown", onKeyDown, { capture: true })
+    );
+  });
 
   const handleDragStart = (event: PointerEvent) => {
     if (event.button !== 0) {

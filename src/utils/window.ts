@@ -62,10 +62,12 @@ export async function listenWindowVisibility(
   const appWindow = getCurrentWebviewWindow();
   const targetLabel = label ?? (appWindow.label as WindowLabel);
 
+  const isTarget = (payload: WindowLabel) => payload === targetLabel;
+
   const unlistenShow = await listen<WindowLabel>(
     LISTEN_KEY.SHOW_WINDOW,
     (event) => {
-      if (event.payload !== targetLabel) {
+      if (!isTarget(event.payload)) {
         return;
       }
 
@@ -76,7 +78,7 @@ export async function listenWindowVisibility(
   const unlistenHide = await listen<WindowLabel>(
     LISTEN_KEY.HIDE_WINDOW,
     (event) => {
-      if (event.payload !== targetLabel) {
+      if (!isTarget(event.payload)) {
         return;
       }
 
@@ -84,8 +86,28 @@ export async function listenWindowVisibility(
     }
   );
 
-  return () => {
+  const unlistenToggle = await listen<WindowLabel>(
+    LISTEN_KEY.TOGGLE_WINDOW,
+    (event) => {
+      if (!isTarget(event.payload)) {
+        return;
+      }
+
+      toggleWindowVisible(targetLabel).catch(() => undefined);
+    }
+  );
+
+  let disposed = false;
+  const unlisten: UnlistenFn = () => {
+    if (disposed) {
+      return;
+    }
+    disposed = true;
+
     unlistenShow();
     unlistenHide();
+    unlistenToggle();
   };
+
+  return unlisten;
 }
