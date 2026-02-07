@@ -2,7 +2,12 @@ import { invoke } from "@tauri-apps/api/core";
 import { emit, listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import type { WindowLabel } from "../config/window.config";
-import { LISTEN_KEY } from "../constants";
+
+const LISTEN_KEY = {
+  SHOW_WINDOW: "show_window",
+  HIDE_WINDOW: "hide_window",
+  TOGGLE_WINDOW: "toggle_window",
+};
 
 const COMMAND = {
   SHOW_WINDOW: "plugin:custom-window|show_window",
