@@ -1,4 +1,4 @@
-import { HashRouter, Route } from "@solidjs/router";
+import { RouterProvider } from "@tanstack/solid-router";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { onCleanup, onMount } from "solid-js";
@@ -6,11 +6,10 @@ import { render } from "solid-js/web";
 import type { WindowLabel } from "./config/window.config";
 import { LISTEN_KEY } from "./constants";
 import "./index.css";
+import { router } from "./router";
 import { hideWindow, showWindow } from "./utils/window";
-import SettingsRoutes from "./windows/settings";
-import TranslatorApp from "./windows/translator";
 
-function AppRouter() {
+function App() {
   const appWindow = getCurrentWebviewWindow();
   let unlistenShow: UnlistenFn | null = null;
   let unlistenHide: UnlistenFn | null = null;
@@ -44,12 +43,7 @@ function AppRouter() {
     unlistenHide?.();
   });
 
-  return (
-    <HashRouter>
-      <Route component={TranslatorApp} path="/" />
-      <SettingsRoutes />
-    </HashRouter>
-  );
+  return <RouterProvider router={router} />;
 }
 
-render(() => <AppRouter />, document.getElementById("root") as HTMLElement);
+render(() => <App />, document.getElementById("root") as HTMLElement);
