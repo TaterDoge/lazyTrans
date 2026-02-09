@@ -38,6 +38,11 @@ export function hideWindow(label?: WindowLabel) {
     .catch(() => undefined);
 }
 
+export async function hideAllWindows(): Promise<void> {
+  const windows = await WebviewWindow.getAll();
+  await Promise.all(windows.map((win) => win.hide()));
+}
+
 export function setAlwaysOnTop(alwaysOnTop: boolean, label?: WindowLabel) {
   getWindow(label)
     .then((win) => {

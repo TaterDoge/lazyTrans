@@ -1,9 +1,8 @@
 import { defaultWindowIcon } from "@tauri-apps/api/app";
 import { Menu, MenuItem } from "@tauri-apps/api/menu";
 import { TrayIcon } from "@tauri-apps/api/tray";
-import { exit } from "@tauri-apps/plugin-process";
 import { onMount } from "solid-js";
-import { showWindow } from "../utils/window";
+import { openSettings, openTranslator, quitApp } from "../actions/window";
 
 const TRAY_ID = "LAZYTRANS_TRAY";
 
@@ -20,19 +19,19 @@ export function useTray() {
     const translateItem = await MenuItem.new({
       id: "translate",
       text: "翻译",
-      action: () => showWindow("translator"),
+      action: () => openTranslator(),
     });
 
     const settingsItem = await MenuItem.new({
       id: "settings",
       text: "设置",
-      action: () => showWindow("settings"),
+      action: () => openSettings(),
     });
 
     const quitItem = await MenuItem.new({
       id: "quit",
       text: "退出",
-      action: () => exit(0),
+      action: () => quitApp(),
     });
 
     const menu = await Menu.new({

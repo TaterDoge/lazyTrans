@@ -37,6 +37,7 @@
         "resizable": true,
         "decorations": true,
         "alwaysOnTop": false,
+        "hiddenTitle": true,
         "center": true,
         "visible": false
       }
