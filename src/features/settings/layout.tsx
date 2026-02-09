@@ -1,23 +1,8 @@
 import { Link, Outlet } from "@tanstack/solid-router";
-import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { For, onCleanup, onMount } from "solid-js";
-import { hideWindow } from "../../utils/window";
+import { For } from "solid-js";
 import { settingsMenuItems } from "./routes";
 
 function SettingsLayout() {
-  onMount(() => {
-    const currentWindow = getCurrentWebviewWindow();
-
-    const unlistenPromise = currentWindow.onCloseRequested((event) => {
-      event.preventDefault();
-      hideWindow("settings");
-    });
-
-    onCleanup(() => {
-      unlistenPromise.then((unlisten) => unlisten());
-    });
-  });
-
   return (
     <div class="flex h-screen bg-gray-50 dark:bg-gray-900">
       <aside class="flex w-56 flex-col border-gray-200 border-r bg-white dark:border-gray-700 dark:bg-gray-800">

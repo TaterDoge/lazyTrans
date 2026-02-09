@@ -1,35 +1,15 @@
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { createSignal, onCleanup, onMount } from "solid-js";
-import { hideWindow } from "../../utils/window";
+import { createSignal } from "solid-js";
+import { pinTranslator } from "../../actions/window";
+import HoverWrapper from "../../components/hover-wrapper";
+import { useWindowShortcut } from "../../hooks/use-window-shortcut";
+import { cn } from "../../utils";
 
 function TranslatorApp() {
   const [text, setText] = createSignal("");
+  const [pinned, setPinned] = createSignal(false);
+  const [bouncing, setBouncing] = createSignal(false);
   const currentWindow = getCurrentWebviewWindow();
-
-  const handleClose = () => {
-    hideWindow();
-  };
-
-  onMount(() => {
-    const unlistenPromise = currentWindow.onCloseRequested((event) => {
-      event.preventDefault();
-      handleClose();
-    });
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === "w" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        e.stopPropagation();
-        handleClose();
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown, { capture: true });
-    onCleanup(() => {
-      unlistenPromise.then((unlisten) => unlisten());
-      window.removeEventListener("keydown", onKeyDown, { capture: true });
-    });
-  });
 
   const handleDragStart = (event: PointerEvent) => {
     if (event.button !== 0) {
@@ -38,23 +18,31 @@ function TranslatorApp() {
     currentWindow.startDragging().catch(console.error);
   };
 
+  const togglePinned = () => {
+    const next = !pinned();
+    setPinned(next);
+    pinTranslator(next);
+    setBouncing(true);
+    setTimeout(() => setBouncing(false), 300);
+  };
+
+  useWindowShortcut({ key: "p", metaKey: true, handler: togglePinned });
+
   return (
-    <div class="flex h-screen flex-col bg-white dark:bg-gray-800">
+    <div class="flex size-full flex-col rounded-xl bg-white">
       <div
-        class="flex items-center justify-between border-b p-4 dark:border-gray-700"
+        class="flex items-center justify-between p-2"
         onPointerDown={handleDragStart}
       >
-        <h2 class="font-semibold text-gray-900 text-lg dark:text-white">
-          翻译
-        </h2>
-        <button
-          class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-          onClick={handleClose}
-          onPointerDown={(event) => event.stopPropagation()}
-          type="button"
-        >
-          ✕
-        </button>
+        <HoverWrapper onClick={togglePinned}>
+          <span
+            class={cn({
+              "icon-[stash--pin-thumbtack]": !pinned(),
+              "icon-[stash--pin-thumbtack-solid] text-blue-400": pinned(),
+              "animate-wiggle": bouncing(),
+            })}
+          />
+        </HoverWrapper>
       </div>
 
       <div class="flex-1 space-y-4 p-4">
