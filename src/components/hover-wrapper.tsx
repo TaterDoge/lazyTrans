@@ -8,7 +8,7 @@ export default function HoverWrapper(
   return (
     <div
       class={cn(
-        "inline-flex size-6 items-center justify-center rounded-md transition-all duration-300 hover:bg-gray-200",
+        "flex items-center justify-center rounded-md p-1 transition-all duration-300 hover:bg-gray-300",
         local.class
       )}
       {...rest}

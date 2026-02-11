@@ -1,8 +1,11 @@
 import { Link, Outlet } from "@tanstack/solid-router";
 import { For } from "solid-js";
+import { useTray } from "../../hooks/use-tray";
 import { settingsMenuItems } from "./routes";
 
 function SettingsLayout() {
+  useTray();
+
   return (
     <div class="flex h-screen bg-gray-50 dark:bg-gray-900">
       <aside class="flex w-56 flex-col border-gray-200 border-r bg-white dark:border-gray-700 dark:bg-gray-800">

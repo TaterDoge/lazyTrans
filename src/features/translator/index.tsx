@@ -1,14 +1,17 @@
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { createSignal } from "solid-js";
-import { pinTranslator } from "../../actions/window";
+import { openSettings, pinTranslator } from "../../actions/window";
 import HoverWrapper from "../../components/hover-wrapper";
-import { useWindowShortcut } from "../../hooks/use-window-shortcut";
+import { useWindowShortcuts } from "../../hooks/use-window-shortcuts";
 import { cn } from "../../utils";
+import { hideWindow } from "../../utils/window";
 
 function TranslatorApp() {
-  const [text, setText] = createSignal("");
+  const [sourceText, setSourceText] = createSignal("");
   const [pinned, setPinned] = createSignal(false);
   const [bouncing, setBouncing] = createSignal(false);
+  const [copyStatus, setCopyStatus] = createSignal(false);
   const currentWindow = getCurrentWebviewWindow();
 
   const handleDragStart = (event: PointerEvent) => {
@@ -26,32 +29,76 @@ function TranslatorApp() {
     setTimeout(() => setBouncing(false), 300);
   };
 
-  useWindowShortcut({ key: "p", metaKey: true, handler: togglePinned });
+  useWindowShortcuts([
+    { shortcut: "mod+w", handler: hideWindow },
+    { shortcut: "mod+p", handler: togglePinned },
+    { shortcut: "mod+,", handler: openSettings },
+  ]);
+
+  // 朗读翻译内容
+  const handleRead = () => {
+    console.log("朗读翻译内容");
+  };
+
+  // 复制翻译内容
+  const handleCopy = async () => {
+    setCopyStatus(true);
+    await writeText(sourceText());
+    setTimeout(() => setCopyStatus(false), 2000);
+  };
 
   return (
-    <div class="flex size-full flex-col rounded-xl bg-white">
+    <div class="flex size-full flex-col gap-y-2 rounded-xl bg-white p-2">
+      {/* 顶部工具栏 */}
       <div
-        class="flex items-center justify-between p-2"
+        class="flex items-center justify-between"
         onPointerDown={handleDragStart}
       >
         <HoverWrapper onClick={togglePinned}>
           <span
-            class={cn({
+            class={cn("scale-125", {
               "icon-[stash--pin-thumbtack]": !pinned(),
               "icon-[stash--pin-thumbtack-solid] text-blue-400": pinned(),
               "animate-wiggle": bouncing(),
             })}
           />
         </HoverWrapper>
+
+        {/* 右侧工具按钮 */}
+        <div class="flex gap-x-2">
+          <HoverWrapper onClick={openSettings} title="设置, cmd+,">
+            <span class="icon-[stash--sliders-h] scale-125" />
+          </HoverWrapper>
+        </div>
       </div>
 
-      <div class="flex-1 space-y-4 p-4">
+      <div class="rounded-lg bg-zinc-100 p-1">
         <textarea
-          class="h-32 w-full resize-none rounded-lg border p-3 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-          onInput={(e) => setText(e.currentTarget.value)}
-          placeholder="输入要翻译的文本..."
-          value={text()}
+          class="min-h-14 w-full resize-none px-1 text-sm focus:outline-none"
+          onInput={(e) => setSourceText(e.currentTarget.value)}
+          value={sourceText()}
         />
+
+        {/* 翻译内容源工具栏 */}
+        <div class="flex justify-between">
+          <div class="flex gap-x-1">
+            {/* 朗读 */}
+            <HoverWrapper onClick={handleRead}>
+              <span class="icon-[tabler--volume]" />
+            </HoverWrapper>
+
+            {/* 复制 */}
+            <HoverWrapper onClick={handleCopy}>
+              <span
+                class={cn({
+                  "icon-[tabler--copy]": !copyStatus(),
+                  "icon-[line-md--circle-twotone-to-confirm-circle-transition] text-green-500":
+                    copyStatus(),
+                })}
+              />
+            </HoverWrapper>
+          </div>
+        </div>
       </div>
 
       <div class="border-t p-4 dark:border-gray-700">

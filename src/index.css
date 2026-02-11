@@ -1,6 +1,8 @@
 @import "tailwindcss";
-@plugin "@iconify/tailwind4" {
-  scale: 1.2;
+@plugin "@iconify/tailwind4";
+
+body {
+  @apply text-black/80;
 }
 
 @theme {
