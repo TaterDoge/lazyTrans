@@ -30,9 +30,9 @@ function TranslatorApp() {
   };
 
   useWindowShortcuts([
-    { shortcut: "mod+w", handler: hideWindow },
-    { shortcut: "mod+p", handler: togglePinned },
-    { shortcut: "mod+,", handler: openSettings },
+    { shortcut: "mod+w", action: hideWindow },
+    { shortcut: "mod+p", action: togglePinned },
+    { shortcut: "mod+,", action: openSettings },
   ]);
 
   // 朗读翻译内容

@@ -2,9 +2,8 @@ import { onCleanup, onMount } from "solid-js";
 import { isMac } from "../utils/platform";
 
 type WindowShortcutEntry = {
-  /** 快捷键组合，如 "mod+p"、"ctrl+shift+p"、"alt+k"。mod 在 macOS 上映射为 meta，其他平台映射为 ctrl */
   shortcut: string;
-  handler: () => void;
+  action: () => void;
 };
 
 type ParsedShortcut = {
@@ -49,11 +48,11 @@ export function useWindowShortcuts(shortcuts: WindowShortcutEntry[]) {
   }));
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    for (const { parsed, handler } of parsedShortcuts) {
+    for (const { parsed, action } of parsedShortcuts) {
       if (matchShortcut(e, parsed)) {
         e.preventDefault();
         e.stopPropagation();
-        handler();
+        action();
         break;
       }
     }

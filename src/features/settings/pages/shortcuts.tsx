@@ -1,64 +1,199 @@
-import { For } from "solid-js";
+import { createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import { initSettings } from "../../../stores/settings";
+import { shortcutsStore } from "../../../stores/settings/shortcuts.store";
+import { isMac } from "../../../utils/platform";
 
-function ShortcutsSettings() {
-  const shortcuts = [
-    { id: "translate", name: "翻译", defaultKey: "Ctrl+Shift+T" },
-    { id: "screenshot", name: "截图翻译", defaultKey: "Ctrl+Shift+S" },
-    { id: "copy", name: "复制结果", defaultKey: "Ctrl+C" },
-    { id: "close", name: "关闭窗口", defaultKey: "Esc" },
-  ];
+const MODIFIER_KEYS = new Set(["Control", "Shift", "Alt", "Meta"]);
+
+const BROWSER_TO_TAURI_MODIFIER: Record<string, string> = {
+  Control: "CommandOrControl",
+  Meta: "CommandOrControl",
+  Shift: "Shift",
+  Alt: "Alt",
+};
+
+const BROWSER_TO_TAURI_KEY: Record<string, string> = {
+  " ": "Space",
+  ArrowUp: "Up",
+  ArrowDown: "Down",
+  ArrowLeft: "Left",
+  ArrowRight: "Right",
+};
+
+function normalizeKey(key: string): string {
+  if (BROWSER_TO_TAURI_KEY[key]) {
+    return BROWSER_TO_TAURI_KEY[key];
+  }
+  if (key.length === 1) {
+    return key.toUpperCase();
+  }
+  return key;
+}
+
+function buildModifierParts(mods: Set<string>): string[] {
+  const order = ["Control", "Meta", "Shift", "Alt"];
+  const parts: string[] = [];
+  let hasCommandOrControl = false;
+  for (const mod of order) {
+    if (!mods.has(mod)) {
+      continue;
+    }
+    const mapped = BROWSER_TO_TAURI_MODIFIER[mod];
+    if (mapped === "CommandOrControl") {
+      if (hasCommandOrControl) {
+        continue;
+      }
+      hasCommandOrControl = true;
+    }
+    parts.push(mapped);
+  }
+  return parts;
+}
+
+function formatDisplay(tauriKey: string): string {
+  return tauriKey
+    .split("+")
+    .map((part) => {
+      switch (part) {
+        case "CommandOrControl":
+          return isMac ? "⌘" : "Ctrl";
+        case "Shift":
+          return isMac ? "⇧" : "Shift";
+        case "Alt":
+          return isMac ? "⌥" : "Alt";
+        default:
+          return part;
+      }
+    })
+    .join(" + ");
+}
+
+function ShortcutRecorder(props: { id: string; currentKey: string }) {
+  const [recording, setRecording] = createSignal(false);
+  const [modifiers, setModifiers] = createSignal<Set<string>>(
+    new Set<string>()
+  );
+
+  const [btnRef, setBtnRef] = createSignal<HTMLButtonElement>();
+
+  function startRecording() {
+    setRecording(true);
+    setModifiers(new Set<string>());
+  }
+
+  function stopRecording() {
+    setRecording(false);
+    setModifiers(new Set<string>());
+  }
+
+  function handleKeyDown(e: KeyboardEvent) {
+    if (!recording()) {
+      return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (e.key === "Escape") {
+      stopRecording();
+      return;
+    }
+
+    if (MODIFIER_KEYS.has(e.key)) {
+      setModifiers((prev) => new Set<string>([...prev, e.key]));
+      return;
+    }
+
+    const mods = modifiers();
+    if (mods.size === 0) {
+      return;
+    }
+
+    const parts = [...buildModifierParts(mods), normalizeKey(e.key)];
+    shortcutsStore.updateShortcut(props.id, parts.join("+"));
+    stopRecording();
+  }
+
+  function handleClickOutside(e: MouseEvent) {
+    const el = btnRef();
+    if (recording() && el && !el.contains(e.target as Node)) {
+      stopRecording();
+    }
+  }
+
+  onMount(() => {
+    document.addEventListener("keydown", handleKeyDown, true);
+    document.addEventListener("mousedown", handleClickOutside);
+  });
+
+  onCleanup(() => {
+    document.removeEventListener("keydown", handleKeyDown, true);
+    document.removeEventListener("mousedown", handleClickOutside);
+  });
+
+  const recordingPreview = () => {
+    const mods = modifiers();
+    if (mods.size === 0) {
+      return "请按下快捷键...";
+    }
+    return `${formatDisplay(buildModifierParts(mods).join("+"))} + ...`;
+  };
 
   return (
-    <div>
-      <h2 class="mb-6 font-bold text-2xl text-gray-800 dark:text-white">
-        快捷键设置
-      </h2>
+    <button
+      class={`cursor-pointer select-none rounded px-2 py-1 font-mono text-sm transition-colors ${
+        recording()
+          ? "bg-blue-100 text-blue-700 ring-2 ring-blue-400 dark:bg-blue-900 dark:text-blue-200 dark:ring-blue-500"
+          : "bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
+      }`}
+      onClick={() => !recording() && startRecording()}
+      ref={setBtnRef}
+      type="button"
+    >
+      <Show fallback={formatDisplay(props.currentKey)} when={recording()}>
+        {recordingPreview()}
+      </Show>
+    </button>
+  );
+}
 
-      <div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
-        <table class="w-full">
-          <thead class="bg-gray-50 dark:bg-gray-700/50">
-            <tr>
-              <th class="px-6 py-3 text-left font-semibold text-gray-700 text-sm dark:text-gray-300">
-                功能
-              </th>
-              <th class="px-6 py-3 text-left font-semibold text-gray-700 text-sm dark:text-gray-300">
-                快捷键
-              </th>
-              <th class="px-6 py-3 text-right font-semibold text-gray-700 text-sm dark:text-gray-300">
-                操作
-              </th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-            <For each={shortcuts}>
-              {(shortcut) => (
-                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                  <td class="px-6 py-4 text-gray-800 dark:text-gray-200">
-                    {shortcut.name}
-                  </td>
-                  <td class="px-6 py-4">
-                    <kbd class="rounded-lg border border-gray-300 bg-gray-100 px-3 py-1.5 font-mono text-gray-700 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300">
-                      {shortcut.defaultKey}
-                    </kbd>
-                  </td>
-                  <td class="px-6 py-4 text-right">
-                    <button
-                      class="px-3 py-1.5 font-medium text-blue-600 text-sm hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-                      type="button"
-                    >
-                      修改
-                    </button>
-                  </td>
-                </tr>
-              )}
-            </For>
-          </tbody>
-        </table>
+function ShortcutsSettings() {
+  onMount(() => initSettings());
+
+  const shortcuts = () => shortcutsStore.getShortcuts();
+  const globalShortcuts = () =>
+    shortcuts().filter((s) => s.category === "global");
+  const internalShortcuts = () =>
+    shortcuts().filter((s) => s.category === "internal");
+
+  return (
+    <div class="flex flex-col gap-6">
+      <div>
+        <h3 class="mb-3 font-semibold text-lg">全局快捷键</h3>
+        <div class="flex flex-col divide-y divide-gray-200 dark:divide-gray-700">
+          <For each={globalShortcuts()}>
+            {(s) => (
+              <div class="flex items-center justify-between py-2">
+                <div>{s.label}</div>
+                <ShortcutRecorder currentKey={s.currentKey} id={s.id} />
+              </div>
+            )}
+          </For>
+        </div>
       </div>
 
-      <p class="mt-4 text-gray-500 text-sm dark:text-gray-400">
-        点击"修改"按钮，然后按下新的快捷键组合即可更改。
-      </p>
+      <div>
+        <h3 class="mb-3 font-semibold text-lg">应用内快捷键</h3>
+        <div class="flex flex-col divide-y divide-gray-200 dark:divide-gray-700">
+          <For each={internalShortcuts()}>
+            {(s) => (
+              <div class="flex items-center justify-between py-2">
+                <div>{s.label}</div>
+                <ShortcutRecorder currentKey={s.currentKey} id={s.id} />
+              </div>
+            )}
+          </For>
+        </div>
+      </div>
     </div>
   );
 }
