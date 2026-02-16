@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/solid-router";
-import TranslatorApp from "../features/translator";
+import Translator from "../features/translator";
 
 export const Route = createFileRoute("/")({
-  component: TranslatorApp,
+  component: Translator,
 });

@@ -24,12 +24,6 @@ export const settingsMenuItems: SettingsMenuItem[] = [
     to: "/settings/shortcuts",
   },
   {
-    id: "language",
-    icon: "icon-[tabler--language]",
-    labelKey: "settings.menu.language",
-    to: "/settings/language",
-  },
-  {
     id: "about",
     icon: "icon-[tabler--info-circle]",
     labelKey: "settings.menu.about",

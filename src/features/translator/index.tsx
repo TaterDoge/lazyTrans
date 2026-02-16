@@ -8,7 +8,7 @@ import { useI18n } from "../../i18n";
 import { cn } from "../../utils";
 import { hideWindow } from "../../utils/window";
 
-function TranslatorApp() {
+function Translator() {
   const { t } = useI18n();
   const [sourceText, setSourceText] = createSignal("");
   const [pinned, setPinned] = createSignal(false);
@@ -118,4 +118,4 @@ function TranslatorApp() {
   );
 }
 
-export default TranslatorApp;
+export default Translator;
