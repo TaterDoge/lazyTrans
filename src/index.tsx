@@ -44,15 +44,9 @@ function App() {
 }
 
 async function bootstrap() {
-  try {
-    await initSettingsStore();
-  } catch (err) {
-    console.warn("initSettingsStore failed", err);
-  }
-
   render(() => <App />, document.getElementById("root") as HTMLElement);
+
+  await initSettingsStore();
 }
 
-bootstrap().catch((err) => {
-  console.error("bootstrap failed", err);
-});
+bootstrap();

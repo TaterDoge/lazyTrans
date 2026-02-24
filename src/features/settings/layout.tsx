@@ -1,18 +1,11 @@
 import { Link, Outlet } from "@tanstack/solid-router";
-import { For, onMount } from "solid-js";
+import { For } from "solid-js";
 import { useI18n } from "../../i18n";
-import { initSettingsStore } from "../../stores/settings";
 import { cn } from "../../utils";
 import { settingsMenuItems } from "./config";
 
 function SettingsLayout() {
   const { t } = useI18n();
-
-  onMount(() => {
-    initSettingsStore().catch((err) => {
-      console.warn("initSettingsStore failed", err);
-    });
-  });
 
   return (
     <div class="flex h-screen bg-gray-50">

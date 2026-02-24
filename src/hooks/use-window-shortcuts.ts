@@ -1,9 +1,8 @@
 import hotkeys from "hotkeys-js";
-import { createEffect, onCleanup, onMount } from "solid-js";
+import { createEffect, onCleanup } from "solid-js";
 import { getWindowShortcutMetas } from "../config/shortcuts.config";
 import type { WindowLabel } from "../config/window.config";
-import { initSettingsStore } from "../stores/settings";
-import { shortcutsStore } from "../stores/settings/shortcuts.store";
+import { shortcutKeys } from "../stores/settings/shortcuts.store";
 
 type ShortcutActionMap = Record<string, () => void | Promise<void>>;
 
@@ -17,13 +16,8 @@ export function useWindowShortcuts(
   const metas = getWindowShortcutMetas(windowLabel);
   const activeMetas = metas.filter((meta) => actions[meta.id]);
 
-  onMount(async () => {
-    await initSettingsStore();
-  });
-
   createEffect(() => {
-    const keys = shortcutsStore.getAllShortcutKeys();
-
+    const keys = { ...shortcutKeys };
     hotkeys.deleteScope(scope);
 
     for (const meta of activeMetas) {

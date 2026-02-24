@@ -1,8 +1,7 @@
 import { register, unregisterAll } from "@tauri-apps/plugin-global-shortcut";
-import { createEffect, onCleanup, onMount } from "solid-js";
+import { createEffect, onCleanup } from "solid-js";
 import { getGlobalShortcutMetas } from "../config/shortcuts.config";
-import { initSettingsStore } from "../stores/settings";
-import { shortcutsStore } from "../stores/settings/shortcuts.store";
+import { shortcutKeys } from "../stores/settings/shortcuts.store";
 
 type ShortcutActionMap = Record<string, () => void | Promise<void>>;
 
@@ -32,13 +31,8 @@ async function registerAllGlobalShortcuts(
 }
 
 export function useAppShortcuts(actions: ShortcutActionMap) {
-  onMount(async () => {
-    await initSettingsStore();
-  });
-
   createEffect(() => {
-    const keys = shortcutsStore.getAllShortcutKeys();
-    registerAllGlobalShortcuts(keys, actions).catch(console.error);
+    registerAllGlobalShortcuts({ ...shortcutKeys }, actions);
   });
 
   onCleanup(() => {

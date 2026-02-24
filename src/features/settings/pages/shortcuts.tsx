@@ -1,7 +1,10 @@
 import { createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import { SHORTCUT_METAS } from "../../../config/shortcuts.config";
 import { useI18n } from "../../../i18n";
-import { initSettingsStore } from "../../../stores/settings";
-import { shortcutsStore } from "../../../stores/settings/shortcuts.store";
+import {
+  shortcutKeys,
+  shortcutsActions,
+} from "../../../stores/settings/shortcuts.store";
 import { isMac } from "../../../utils/platform";
 
 const MODIFIER_KEYS = new Set(["Control", "Shift", "Alt", "Meta"]);
@@ -98,7 +101,7 @@ function ShortcutRecorder(props: { id: string; currentKey: string }) {
     }
 
     const parts = [...buildModifierParts(mods), normalizeKey(e.key)];
-    shortcutsStore.updateShortcut(props.id, parts.join("+"));
+    shortcutsActions.update({ [props.id]: parts.join("+") });
     stopRecording();
   }
 
@@ -148,9 +151,11 @@ function ShortcutRecorder(props: { id: string; currentKey: string }) {
 function ShortcutsSettings() {
   const { t } = useI18n();
 
-  onMount(() => initSettingsStore());
-
-  const shortcuts = () => shortcutsStore.getShortcuts();
+  const shortcuts = () =>
+    SHORTCUT_METAS.map((meta) => ({
+      ...meta,
+      currentKey: shortcutKeys[meta.id] || meta.defaultKey,
+    }));
   const globalShortcuts = () =>
     shortcuts().filter((s) => s.category === "global");
   const internalShortcuts = () =>

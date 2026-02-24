@@ -1,21 +1,62 @@
 import { Store } from "@tauri-apps/plugin-store";
+import {
+  createStore,
+  produce,
+  reconcile,
+  type SetStoreFunction,
+} from "solid-js/store";
 
 const STORE_FILE = "settings.json";
 
 let store: Store | null = null;
-
-/** 获取共享的 Tauri Store 实例（懒加载单例） */
 export async function getStore(): Promise<Store> {
   if (!store) {
     store = await Store.load(STORE_FILE);
   }
   return store;
 }
-
-/** 子 store 需要实现的接口 */
 export interface SettingsModule {
-  /** 从持久化存储加载数据到内存 signal */
   load(store: Store): Promise<void>;
-  /** 订阅跨窗口的 store 变化，同步更新本窗口的 signal */
-  subscribe(store: Store): void;
+  update(partial: unknown): Promise<void>;
+}
+
+export interface SettingsModuleResult<T extends object> {
+  store: T;
+  setStore: SetStoreFunction<T>;
+  actions: SettingsModule & { update(partial: Partial<T>): Promise<void> };
+}
+
+export function createSettingsModule<T extends object>(
+  key: string,
+  defaults: T,
+  options?: {
+    onLoad?: (saved: T | null, defaults: T) => T;
+  }
+): SettingsModuleResult<T> {
+  const [state, setState] = createStore<T>(defaults);
+  let tauriStore: Store | null = null;
+
+  const actions = {
+    async load(s: Store) {
+      tauriStore = s;
+      const saved = await s.get<T>(key);
+      const resolved = options?.onLoad
+        ? options.onLoad(saved ?? null, defaults)
+        : saved;
+      if (resolved) {
+        setState(reconcile(resolved));
+      }
+      s.onKeyChange<T>(key, (value) => {
+        if (value) {
+          setState(reconcile(value));
+        }
+      });
+    },
+    async update(partial: Partial<T>) {
+      setState(produce((s) => Object.assign(s, partial)));
+      await tauriStore?.set(key, state);
+    },
+  };
+
+  return { store: state, setStore: setState, actions };
 }

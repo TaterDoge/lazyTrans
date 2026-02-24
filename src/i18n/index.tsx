@@ -6,7 +6,7 @@ import {
   type ParentComponent,
   useContext,
 } from "solid-js";
-import { generalStore } from "../stores/settings/general.store";
+import { generalActions, generalStore } from "../stores/settings/general.store";
 import { dict as enUS } from "./locales/en-us";
 import { dict as zhCN } from "./locales/zh-cn";
 import type { Locale, RawDictionary } from "./types";
@@ -33,7 +33,7 @@ type I18nContextValue = {
 const I18nContext = createContext<I18nContextValue>();
 
 export const I18nProvider: ParentComponent = (props) => {
-  const locale = () => generalStore.getLocale();
+  const locale = () => generalStore.locale;
 
   const initialRaw = locale() === "en_US" ? enUS : zhCN;
 
@@ -44,7 +44,7 @@ export const I18nProvider: ParentComponent = (props) => {
   const t = translator(dict, resolveTemplate);
 
   const setLocale = (l: Locale) => {
-    generalStore.setLocale(l);
+    generalActions.update({ locale: l });
   };
 
   return (
