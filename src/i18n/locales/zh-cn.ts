@@ -10,6 +10,9 @@ export const dict = {
       autoStart: "开机自启动",
       displayLanguage: "显示语言",
       systemTheme: "系统主题",
+      themeSystem: "系统",
+      themeLight: "亮色",
+      themeDark: "暗色",
     },
     shortcuts: {
       globalTitle: "全局快捷键",

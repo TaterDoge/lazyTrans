@@ -75,7 +75,7 @@ function SettingsLayout() {
           class="flex h-12 shrink-0 cursor-grab items-center gap-2 border-b px-4 active:cursor-grabbing"
           onPointerDown={handleDragStart}
         >
-          <SidebarTrigger class="-ml-1 text-foreground" />
+          <SidebarTrigger class="cursor-pointer" />
         </header>
         <main class="flex-1 overflow-auto p-8">
           <Outlet />

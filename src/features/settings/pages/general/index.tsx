@@ -1,40 +1,28 @@
-import { Switch } from "@/components/ui/switch";
+import { For, Show } from "solid-js";
 import { useI18n } from "../../../../i18n";
-import { LanguageSelect } from "./components/language-select";
-import { ThemeSelect } from "./components/theme-select";
+import { SettingItemRenderer } from "./components/setting-item";
+import type { DictionaryLeafKey } from "./config";
+import { generalSettingGroups } from "./groups";
 
 function GeneralSettings() {
   const { t } = useI18n();
 
   return (
-    <div>
-      <div class="space-y-6">
-        <section class="space-y-4 rounded-lg border p-6">
-          <div class="flex items-center justify-between">
-            <span class="cursor-pointer pt-2">
-              {t("settings.general.autoStart")}
-            </span>
-
-            <Switch />
-          </div>
-
-          <div class="flex items-start justify-between">
-            <span class="cursor-pointer pt-2">
-              {t("settings.general.displayLanguage")}
-            </span>
-
-            <LanguageSelect />
-          </div>
-
-          <div class="flex items-start justify-between">
-            <span class="cursor-pointer pt-2">
-              {t("settings.general.systemTheme")}
-            </span>
-
-            <ThemeSelect />
-          </div>
-        </section>
-      </div>
+    <div class="space-y-6">
+      <For each={generalSettingGroups}>
+        {(group) => (
+          <section class="space-y-4 rounded-lg border p-6">
+            <Show when={group.titleKey}>
+              <h3 class="font-medium text-muted-foreground text-sm">
+                {t(group.titleKey as DictionaryLeafKey)}
+              </h3>
+            </Show>
+            <For each={group.items}>
+              {(item) => <SettingItemRenderer item={item} />}
+            </For>
+          </section>
+        )}
+      </For>
     </div>
   );
 }

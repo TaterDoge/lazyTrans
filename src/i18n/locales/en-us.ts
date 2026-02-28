@@ -12,6 +12,9 @@ export const dict: RawDictionary = {
       autoStart: "Launch at Login",
       displayLanguage: "Display Language",
       systemTheme: "System Theme",
+      themeSystem: "System",
+      themeLight: "Light",
+      themeDark: "Dark",
     },
     shortcuts: {
       globalTitle: "Global Shortcuts",
