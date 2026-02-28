@@ -1,6 +1,7 @@
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { createSignal } from "solid-js";
+import { Textarea } from "@/components/ui/textarea";
 import { openSettings, pinTranslator } from "../../actions/window";
 import HoverWrapper from "../../components/hover-wrapper";
 import { useAutoWindowHeight } from "../../hooks/use-auto-window-height";
@@ -57,7 +58,7 @@ function Translator() {
 
   return (
     <div
-      class="flex w-full flex-col gap-y-2 rounded-xl bg-background p-2"
+      class="flex w-full flex-col gap-y-2 rounded-xl bg-background p-2 text-foreground"
       ref={(el) => {
         rootRef = el;
       }}
@@ -88,16 +89,16 @@ function Translator() {
         </div>
       </div>
 
-      <div class="rounded-lg bg-zinc-100 p-1">
-        <textarea
+      <div class="rounded-lg border p-0.5">
+        <Textarea
           autofocus
-          class="field-sizing-content max-h-300 min-h-14 w-full resize-none overflow-y-auto px-1 text-sm focus:outline-none"
+          class="field-sizing-content max-h-[350px] min-h-20 w-full resize-none overflow-y-auto border-none px-2 text-sm focus:outline-none"
           onInput={(e) => setSourceText(e.currentTarget.value)}
           value={sourceText()}
         />
 
         {/* 翻译内容源工具栏 */}
-        <div class="flex justify-between">
+        <div class="flex justify-between p-2">
           <div class="flex gap-x-1">
             {/* 朗读 */}
             <HoverWrapper onClick={handleRead}>
@@ -116,15 +117,6 @@ function Translator() {
             </HoverWrapper>
           </div>
         </div>
-      </div>
-
-      <div class="border-t p-4 dark:border-gray-700">
-        <button
-          class="w-full rounded-lg bg-blue-600 py-2 text-white transition-colors hover:bg-blue-700"
-          type="button"
-        >
-          {t("translator.translate")}
-        </button>
       </div>
     </div>
   );

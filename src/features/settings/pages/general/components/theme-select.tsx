@@ -11,11 +11,11 @@ import {
   generalStore,
 } from "../../../../../stores/settings/general.store";
 
-const options: {
+const options: Array<{
   value: GeneralSettings["theme"];
   icon: string;
   label: string;
-}[] = [
+}> = [
   { value: "system", icon: "icon-[line-md--computer]", label: "系统" },
   {
     value: "light",
@@ -34,8 +34,10 @@ export function ThemeSelect() {
     <Select
       itemComponent={(props) => (
         <SelectItem item={props.item}>
-          <span class={props.item.rawValue.icon} />
-          <span class="ml-1">{props.item.rawValue.label}</span>
+          <div class="flex items-center gap-x-2">
+            <span class={props.item.rawValue.icon} />
+            <span>{props.item.rawValue.label}</span>
+          </div>
         </SelectItem>
       )}
       onChange={(opt) => opt && generalActions.update({ theme: opt.value })}
@@ -49,7 +51,7 @@ export function ThemeSelect() {
           {(state) => (
             <>
               <span class={state.selectedOption().icon} />
-              <span class="ml-1">{state.selectedOption().label}</span>
+              <span>{state.selectedOption().label}</span>
             </>
           )}
         </SelectValue>
