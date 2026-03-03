@@ -1,7 +1,7 @@
 import { Show } from "solid-js";
 import { Dynamic } from "solid-js/web";
-import { useI18n } from "../../../../../i18n";
-import type { SettingItem } from "../config";
+import { useI18n } from "../../../i18n";
+import type { SettingItem } from "./types";
 
 /**
  * 通用设置行：只负责「标签 + 描述 + 控件插槽」的布局。
@@ -11,14 +11,12 @@ export function SettingItemRenderer(props: { item: SettingItem }) {
   const { t } = useI18n();
 
   return (
-    <div class="flex items-center justify-between gap-4">
+    <div class="flex flex-1 items-center justify-between gap-4">
       <div class="flex flex-col gap-0.5">
-        <span class="text-sm">{t(props.item.labelKey) as string}</span>
+        <span class="text-sm">{t(props.item.labelKey)}</span>
         <Show when={props.item.descriptionKey}>
           {(key) => (
-            <span class="text-muted-foreground text-xs">
-              {t(key()) as string}
-            </span>
+            <span class="text-muted-foreground text-xs">{t(key())}</span>
           )}
         </Show>
       </div>

@@ -1,7 +1,7 @@
 import { defaultWindowIcon } from "@tauri-apps/api/app";
 import { Menu, MenuItem } from "@tauri-apps/api/menu";
 import { TrayIcon } from "@tauri-apps/api/tray";
-import { exit } from "@tauri-apps/plugin-process";
+import { exit, relaunch } from "@tauri-apps/plugin-process";
 import { onMount } from "solid-js";
 import { hideAllWindows, showWindow } from "../utils/window";
 
@@ -32,6 +32,12 @@ export function useTray() {
       },
     });
 
+    const restartItem = await MenuItem.new({
+      id: "restart",
+      text: "重启",
+      action: () => relaunch(),
+    });
+
     const quitItem = await MenuItem.new({
       id: "quit",
       text: "退出",
@@ -39,7 +45,7 @@ export function useTray() {
     });
 
     const menu = await Menu.new({
-      items: [translateItem, settingsItem, quitItem],
+      items: [translateItem, settingsItem, restartItem, quitItem],
     });
 
     const icon = await defaultWindowIcon();

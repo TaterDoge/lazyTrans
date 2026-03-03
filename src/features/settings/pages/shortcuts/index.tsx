@@ -1,19 +1,19 @@
 import { For, Show } from "solid-js";
 import { useI18n } from "../../../../i18n";
 import { SettingItemRenderer } from "../../components/setting-item";
-import type { DictionaryLeafKey } from "./config";
-import { generalSettingGroups } from "./groups";
+import type { DictionaryLeafKey } from "../../components/types";
+import { shortcutsSettingGroups } from "./groups";
 
-function GeneralSettings() {
+function ShortcutsSettings() {
   const { t } = useI18n();
 
   return (
-    <div class="space-y-6">
-      <For each={generalSettingGroups}>
+    <div class="flex flex-col gap-6">
+      <For each={shortcutsSettingGroups}>
         {(group) => (
-          <>
+          <div class="flex flex-col gap-3">
             <Show when={group.titleKey}>
-              <h3 class="font-medium text-muted-foreground text-sm">
+              <h3 class="font-medium text-base">
                 {t(group.titleKey as DictionaryLeafKey)}
               </h3>
             </Show>
@@ -23,11 +23,11 @@ function GeneralSettings() {
                 {(item) => <SettingItemRenderer item={item} />}
               </For>
             </section>
-          </>
+          </div>
         )}
       </For>
     </div>
   );
 }
 
-export default GeneralSettings;
+export default ShortcutsSettings;

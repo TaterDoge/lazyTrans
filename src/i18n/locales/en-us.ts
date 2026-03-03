@@ -19,15 +19,15 @@ export const dict: RawDictionary = {
     shortcuts: {
       globalTitle: "Global Shortcuts",
       internalTitle: "In-App Shortcuts",
-      recording: "Press a shortcut...",
+      recording: "Press a shortcut",
     },
   },
   translator: {
-    settingsTooltip: "Settings, cmd+,",
-    translate: "Translate",
+    settingsTooltip: "Settings, cmd+",
+    translate: "Input Translate",
   },
   shortcuts: {
-    translate: "Translate",
+    inputTranslate: "Input Translate",
     hideWindow: "Hide Window",
     togglePinned: "Toggle Pin",
     openSettings: "Open Settings",

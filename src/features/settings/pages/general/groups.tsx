@@ -9,7 +9,7 @@ import {
   generalActions,
   generalStore,
 } from "../../../../stores/settings/general.store";
-import { SelectControl, SwitchControl } from "./components/controls";
+import { SelectControl, SwitchControl } from "../../components/controls";
 import type { SettingGroup } from "./config";
 import { LANGUAGE_OPTIONS, THEME_OPTIONS } from "./config";
 

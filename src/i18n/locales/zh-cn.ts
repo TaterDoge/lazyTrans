@@ -17,15 +17,15 @@ export const dict = {
     shortcuts: {
       globalTitle: "全局快捷键",
       internalTitle: "应用内快捷键",
-      recording: "请按下快捷键...",
+      recording: "请按下快捷键",
     },
   },
   translator: {
-    settingsTooltip: "设置, cmd+,",
-    translate: "翻译",
+    settingsTooltip: "设置, cmd+",
+    translate: "输入翻译",
   },
   shortcuts: {
-    translate: "翻译",
+    inputTranslate: "输入翻译",
     hideWindow: "隐藏窗口",
     togglePinned: "置顶/取消置顶",
     openSettings: "打开设置",

@@ -14,8 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { useI18n } from "../../../../../i18n";
-import type { SelectOption } from "../config";
+import { useI18n } from "../../../i18n";
+import type { SelectOption } from "./types";
 
 // ─── Switch 控件 ──────────────────────────────────────────────────────────────
 

@@ -8,7 +8,7 @@ export default function HoverWrapper(
   return (
     <div
       class={cn(
-        "flex items-center justify-center rounded-md p-1 transition-all duration-300 hover:bg-secondary",
+        "flex cursor-pointer items-center justify-center rounded-md p-1 transition-all duration-300 hover:bg-secondary",
         local.class
       )}
       {...rest}

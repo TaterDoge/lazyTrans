@@ -6,7 +6,7 @@ export type ShortcutMeta = {
   id: string;
   labelKey: keyof Dictionary & `shortcuts.${string}`;
   defaultKey: string;
-  category: "global" | "internal";
+  type: "global" | "internal";
   windows?: WindowLabel[];
 };
 
@@ -16,29 +16,29 @@ const MOD = isMac ? "command" : "ctrl";
 export const SHORTCUT_METAS: ShortcutMeta[] = [
   {
     id: "translate",
-    labelKey: "shortcuts.translate",
+    labelKey: "shortcuts.inputTranslate",
     defaultKey: `${MOD}+.`,
-    category: "global",
+    type: "global",
   },
   {
     id: "window.hide",
     labelKey: "shortcuts.hideWindow",
     defaultKey: `${MOD}+w`,
-    category: "internal",
+    type: "internal",
     windows: ["translator", "settings"],
   },
   {
     id: "translator.togglePinned",
     labelKey: "shortcuts.togglePinned",
     defaultKey: `${MOD}+p`,
-    category: "internal",
+    type: "internal",
     windows: ["translator"],
   },
   {
     id: "app.openSettings",
     labelKey: "shortcuts.openSettings",
     defaultKey: `${MOD}+,`,
-    category: "internal",
+    type: "internal",
     windows: ["translator"],
   },
 ];
@@ -51,10 +51,10 @@ export function getWindowShortcutMetas(
   windowLabel: WindowLabel
 ): ShortcutMeta[] {
   return SHORTCUT_METAS.filter((s) => {
-    if (s.category !== "internal") {
+    if (s.type !== "internal") {
       return false;
     }
-    if (!s.windows || s.windows.length === 0) {
+    if (!s?.windows) {
       return true;
     }
     return s.windows.includes(windowLabel);
@@ -62,5 +62,9 @@ export function getWindowShortcutMetas(
 }
 
 export function getGlobalShortcutMetas(): ShortcutMeta[] {
-  return SHORTCUT_METAS.filter((s) => s.category === "global");
+  return SHORTCUT_METAS.filter((s) => s.type === "global");
+}
+
+export function getInternalShortcutMetas(): ShortcutMeta[] {
+  return SHORTCUT_METAS.filter((s) => s.type === "internal");
 }
