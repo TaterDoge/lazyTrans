@@ -23,3 +23,7 @@ target
 *.njsproj
 *.sln
 *.sw?
+
+
+# Turborepo
+.turbo

@@ -1,0 +1,9 @@
+[install]
+# 启用 workspace 包链接
+linkWorkspacePackages = true
+
+# 使用文本锁文件（便于 git 跟踪）
+saveTextLockfile = true
+
+# 生产安装时包含 devDependencies（开发环境需要）
+production = false

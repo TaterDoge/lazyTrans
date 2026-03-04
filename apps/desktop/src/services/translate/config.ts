@@ -69,7 +69,7 @@ export const TRANSLATE_PROVIDERS: Record<TranslateProvider, ProviderMeta> = {
   bing: {
     id: "bing",
     name: "Bing",
-    icon: "icon-[simple-icons--bing]",
+    icon: "icon-[lineicons--bing]",
     description: "Bing 翻译 (免费)",
     requiresApiKey: false,
     defaultEndpoint: "https://api-edge.cognitive.microsofttranslator.com",
