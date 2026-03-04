@@ -18,6 +18,18 @@ export const settingsMenuItems: SettingsMenuItem[] = [
     to: "/settings",
   },
   {
+    id: "translate",
+    icon: "icon-[tabler--language]",
+    labelKey: "settings.menu.translate",
+    to: "/settings/translate",
+  },
+  {
+    id: "service",
+    icon: "icon-[tabler--cloud-cog]",
+    labelKey: "settings.menu.service",
+    to: "/settings/service",
+  },
+  {
     id: "shortcuts",
     icon: "icon-[tabler--keyboard]",
     labelKey: "settings.menu.shortcuts",

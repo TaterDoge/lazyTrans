@@ -12,7 +12,9 @@ import { Route as rootRouteImport } from "./routes/__root";
 import { Route as SettingsRouteRouteImport } from "./routes/settings/route";
 import { Route as IndexRouteImport } from "./routes/index";
 import { Route as SettingsIndexRouteImport } from "./routes/settings/index";
+import { Route as SettingsTranslateRouteImport } from "./routes/settings/translate";
 import { Route as SettingsShortcutsRouteImport } from "./routes/settings/shortcuts";
+import { Route as SettingsServiceRouteImport } from "./routes/settings/service";
 import { Route as SettingsAboutRouteImport } from "./routes/settings/about";
 
 const SettingsRouteRoute = SettingsRouteRouteImport.update({
@@ -30,9 +32,19 @@ const SettingsIndexRoute = SettingsIndexRouteImport.update({
   path: "/",
   getParentRoute: () => SettingsRouteRoute,
 } as any);
+const SettingsTranslateRoute = SettingsTranslateRouteImport.update({
+  id: "/translate",
+  path: "/translate",
+  getParentRoute: () => SettingsRouteRoute,
+} as any);
 const SettingsShortcutsRoute = SettingsShortcutsRouteImport.update({
   id: "/shortcuts",
   path: "/shortcuts",
+  getParentRoute: () => SettingsRouteRoute,
+} as any);
+const SettingsServiceRoute = SettingsServiceRouteImport.update({
+  id: "/service",
+  path: "/service",
   getParentRoute: () => SettingsRouteRoute,
 } as any);
 const SettingsAboutRoute = SettingsAboutRouteImport.update({
@@ -45,13 +57,17 @@ export interface FileRoutesByFullPath {
   "/": typeof IndexRoute;
   "/settings": typeof SettingsRouteRouteWithChildren;
   "/settings/about": typeof SettingsAboutRoute;
+  "/settings/service": typeof SettingsServiceRoute;
   "/settings/shortcuts": typeof SettingsShortcutsRoute;
+  "/settings/translate": typeof SettingsTranslateRoute;
   "/settings/": typeof SettingsIndexRoute;
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute;
   "/settings/about": typeof SettingsAboutRoute;
+  "/settings/service": typeof SettingsServiceRoute;
   "/settings/shortcuts": typeof SettingsShortcutsRoute;
+  "/settings/translate": typeof SettingsTranslateRoute;
   "/settings": typeof SettingsIndexRoute;
 }
 export interface FileRoutesById {
@@ -59,7 +75,9 @@ export interface FileRoutesById {
   "/": typeof IndexRoute;
   "/settings": typeof SettingsRouteRouteWithChildren;
   "/settings/about": typeof SettingsAboutRoute;
+  "/settings/service": typeof SettingsServiceRoute;
   "/settings/shortcuts": typeof SettingsShortcutsRoute;
+  "/settings/translate": typeof SettingsTranslateRoute;
   "/settings/": typeof SettingsIndexRoute;
 }
 export interface FileRouteTypes {
@@ -68,16 +86,26 @@ export interface FileRouteTypes {
     | "/"
     | "/settings"
     | "/settings/about"
+    | "/settings/service"
     | "/settings/shortcuts"
+    | "/settings/translate"
     | "/settings/";
   fileRoutesByTo: FileRoutesByTo;
-  to: "/" | "/settings/about" | "/settings/shortcuts" | "/settings";
+  to:
+    | "/"
+    | "/settings/about"
+    | "/settings/service"
+    | "/settings/shortcuts"
+    | "/settings/translate"
+    | "/settings";
   id:
     | "__root__"
     | "/"
     | "/settings"
     | "/settings/about"
+    | "/settings/service"
     | "/settings/shortcuts"
+    | "/settings/translate"
     | "/settings/";
   fileRoutesById: FileRoutesById;
 }
@@ -109,11 +137,25 @@ declare module "@tanstack/solid-router" {
       preLoaderRoute: typeof SettingsIndexRouteImport;
       parentRoute: typeof SettingsRouteRoute;
     };
+    "/settings/translate": {
+      id: "/settings/translate";
+      path: "/translate";
+      fullPath: "/settings/translate";
+      preLoaderRoute: typeof SettingsTranslateRouteImport;
+      parentRoute: typeof SettingsRouteRoute;
+    };
     "/settings/shortcuts": {
       id: "/settings/shortcuts";
       path: "/shortcuts";
       fullPath: "/settings/shortcuts";
       preLoaderRoute: typeof SettingsShortcutsRouteImport;
+      parentRoute: typeof SettingsRouteRoute;
+    };
+    "/settings/service": {
+      id: "/settings/service";
+      path: "/service";
+      fullPath: "/settings/service";
+      preLoaderRoute: typeof SettingsServiceRouteImport;
       parentRoute: typeof SettingsRouteRoute;
     };
     "/settings/about": {
@@ -128,13 +170,17 @@ declare module "@tanstack/solid-router" {
 
 interface SettingsRouteRouteChildren {
   SettingsAboutRoute: typeof SettingsAboutRoute;
+  SettingsServiceRoute: typeof SettingsServiceRoute;
   SettingsShortcutsRoute: typeof SettingsShortcutsRoute;
+  SettingsTranslateRoute: typeof SettingsTranslateRoute;
   SettingsIndexRoute: typeof SettingsIndexRoute;
 }
 
 const SettingsRouteRouteChildren: SettingsRouteRouteChildren = {
   SettingsAboutRoute: SettingsAboutRoute,
+  SettingsServiceRoute: SettingsServiceRoute,
   SettingsShortcutsRoute: SettingsShortcutsRoute,
+  SettingsTranslateRoute: SettingsTranslateRoute,
   SettingsIndexRoute: SettingsIndexRoute,
 };
 

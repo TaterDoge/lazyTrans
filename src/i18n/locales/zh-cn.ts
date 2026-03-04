@@ -2,9 +2,16 @@ export const dict = {
   settings: {
     title: "设置",
     menu: {
-      general: "通用",
-      shortcuts: "快捷键",
+      general: "通用设置",
+      translate: "翻译设置",
+      service: "服务设置",
+      shortcuts: "快捷键设置",
       about: "关于",
+    },
+    translate: {
+      languageConfig: "语言配置",
+      sourceLang: "源语言",
+      targetLang: "目标语言",
     },
     general: {
       autoStart: "开机自启动",
@@ -13,6 +20,30 @@ export const dict = {
       themeSystem: "系统",
       themeLight: "亮色",
       themeDark: "暗色",
+    },
+    service: {
+      title: "服务设置",
+      tab: {
+        translate: "翻译",
+        tts: "语音",
+        ocr: "识别",
+      },
+      translate: {
+        provider: "服务提供商",
+        apiConfig: "API 配置",
+        apiKey: "API Key",
+        apiEndpoint: "API 地址",
+        model: "模型",
+        translateConfig: "翻译配置",
+        sourceLang: "源语言",
+        targetLang: "目标语言",
+        advancedConfig: "高级配置",
+        promptTemplate: "自定义提示词",
+        promptTemplatePlaceholder: "留空使用默认提示词...",
+        promptTemplateDesc: "自定义翻译提示词，可用于调整翻译风格",
+        temperature: "温度",
+        temperatureDesc: "较高的值会使输出更随机",
+      },
     },
     shortcuts: {
       globalTitle: "全局快捷键",

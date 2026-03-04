@@ -1,8 +1,13 @@
 import { getStore, type SettingsModule } from "./base";
 import { generalActions } from "./general.store";
+import { translateActions } from "./services/translate.store";
 import { shortcutsActions } from "./shortcuts.store";
 
-const modules: SettingsModule[] = [generalActions, shortcutsActions];
+const modules: SettingsModule[] = [
+  generalActions,
+  shortcutsActions,
+  translateActions,
+];
 
 let loaded = false;
 

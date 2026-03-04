@@ -35,7 +35,7 @@ function SettingsLayout() {
   };
 
   return (
-    <SidebarProvider class="bg-background text-foreground">
+    <SidebarProvider class="h-screen bg-background text-foreground">
       <Sidebar collapsible="icon">
         <SidebarHeader
           class="cursor-grab pt-10 active:cursor-grabbing"
@@ -83,7 +83,7 @@ function SettingsLayout() {
         >
           <SidebarTrigger class="cursor-pointer" />
         </header>
-        <main class="flex-1 overflow-auto p-8">
+        <main class="flex-1 overflow-y-scroll p-8">
           <Outlet />
         </main>
       </SidebarInset>

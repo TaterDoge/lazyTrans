@@ -1,33 +1,62 @@
-import type { RawDictionary } from "../types";
-
-export const dict: RawDictionary = {
+export const dict = {
   settings: {
     title: "Settings",
     menu: {
-      general: "General",
-      shortcuts: "Shortcuts",
+      general: "General Settings",
+      translate: "Translation Settings",
+      service: "Service Settings",
+      shortcuts: "Shortcut Settings",
       about: "About",
     },
+    translate: {
+      languageConfig: "Language Settings",
+      sourceLang: "Source Language",
+      targetLang: "Target Language",
+    },
     general: {
-      autoStart: "Launch at Login",
-      displayLanguage: "Display Language",
-      systemTheme: "System Theme",
+      autoStart: "Launch at startup",
+      displayLanguage: "Display language",
+      systemTheme: "Theme",
       themeSystem: "System",
       themeLight: "Light",
       themeDark: "Dark",
     },
+    service: {
+      title: "Service Settings",
+      tab: {
+        translate: "Translate",
+        tts: "TTS",
+        ocr: "OCR",
+      },
+      translate: {
+        provider: "Provider",
+        apiConfig: "API Configuration",
+        apiKey: "API Key",
+        apiEndpoint: "API Endpoint",
+        model: "Model",
+        translateConfig: "Translation Settings",
+        sourceLang: "Source Language",
+        targetLang: "Target Language",
+        advancedConfig: "Advanced Settings",
+        promptTemplate: "Custom Prompt",
+        promptTemplatePlaceholder: "Leave empty for default prompt...",
+        promptTemplateDesc: "Customize the translation prompt to adjust style",
+        temperature: "Temperature",
+        temperatureDesc: "Higher values make output more random",
+      },
+    },
     shortcuts: {
       globalTitle: "Global Shortcuts",
-      internalTitle: "In-App Shortcuts",
-      recording: "Press a shortcut",
+      internalTitle: "App Shortcuts",
+      recording: "Press shortcut keys",
     },
   },
   translator: {
     settingsTooltip: "Settings, cmd+",
-    translate: "Input Translate",
+    translate: "Translate",
   },
   shortcuts: {
-    inputTranslate: "Input Translate",
+    inputTranslate: "Translate Input",
     hideWindow: "Hide Window",
     togglePinned: "Toggle Pin",
     openSettings: "Open Settings",
