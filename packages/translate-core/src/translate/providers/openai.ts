@@ -2,7 +2,7 @@
  * OpenAI 翻译 Provider
  */
 
-import type { IProvider, ServiceCapability } from "@/services/core";
+import type { IProvider, ServiceCapability } from "../../core";
 import type {
   TranslateConfig,
   TranslateOptions,

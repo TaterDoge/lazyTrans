@@ -1,6 +1,6 @@
 # LazyTrans Monorepo 架构演进计划
 
-> **目标**：将 LazyTrans 重构为基于 Bun + Turborepo 的 monorepo 架构，提取翻译核心为独立 npm 包
+> **目标**：将 LazyTrans 重构为基于 Bun + Turborepo 的 monorepo 架构，提取翻译核心为独立 workspace 包（暂不进行发布流程）
 
 ---
 
@@ -28,7 +28,7 @@ lazyTrans-monorepo/
 │       └── package.json
 │
 ├── packages/
-│   └── translate-core/       # 翻译核心包（可发布到 npm）
+│   └── translate-core/       # 翻译核心包（内部 workspace 包）
 │       ├── src/
 │       │   ├── core/         # 服务注册系统
 │       │   ├── translate/    # 翻译实现
@@ -45,7 +45,6 @@ lazyTrans-monorepo/
 
 - **包管理器**：Bun (v1.2.0+)
 - **任务编排**：Turborepo (v2.5.0+)
-- **版本管理**：Changesets
 - **构建工具**：tsup (translate-core) / Vite (desktop)
 - **类型系统**：TypeScript 5.9+
 
@@ -459,7 +458,7 @@ MIT
 
 ---
 
-## 🚧 Phase 3: 集成与兼容（待执行）
+## 🚧 Phase 3: 集成与兼容（进行中）
 
 **目标**：在 desktop 中集成 translate-core，创建兼容层
 
@@ -490,7 +489,7 @@ export * from "@lazytrans/translate-core/translate/types";
 
 ```typescript
 export * as TranslateService from "./translate";
-export * as CoreService from "./core";
+export * as CoreService from "@lazytrans/translate-core";
 ```
 
 ### 3.3 移除本地 core（已迁移到包）
@@ -503,16 +502,16 @@ rm -rf apps/desktop/src/services/translate/providers
 
 ### 3.4 验证清单
 
-- [ ] 兼容层创建完成
-- [ ] `bun install` 成功
-- [ ] workspace 依赖链接正常
-- [ ] 类型检查通过
-- [ ] 应用启动正常
+- [x] 兼容层创建完成
+- [x] `bun install` 成功
+- [x] workspace 依赖链接正常
+- [x] 类型检查通过
+- [x] 应用启动正常
 - [ ] 翻译功能正常
 
 ---
 
-## 🚧 Phase 4: 验证与优化（待执行）
+## 🚧 Phase 4: 验证与优化（进行中）
 
 **目标**：全面验证 monorepo 功能
 
@@ -557,91 +556,32 @@ bun --cwd packages/translate-core run build
 
 ### 4.4 性能验证
 
-- [ ] Turborepo 缓存生效
-- [ ] 增量构建正常
-- [ ] 依赖安装速度
-- [ ] 应用启动速度
+- [x] Turborepo 缓存生效（`typecheck/build` 二次执行 `4/4 cache hit`）
+- [x] 增量构建正常（`FULL TURBO`，总耗时约 `407ms`）
+- [x] 依赖安装速度（`bun install --frozen-lockfile`：`real 2.44s`）
+- [x] 应用启动速度（`tauri dev`：Vite ready ~`729ms`，Rust dev ~`0.71s`）
 
 ### 4.5 验证清单
 
-- [ ] Turborepo 任务全部通过
-- [ ] 应用功能完整
-- [ ] 构建产物正确
-- [ ] 性能符合预期
+- [ ] Turborepo 任务全部通过（当前 `lint`/`test` 失败）
+- [ ] 应用功能完整（Google/Bing/OpenAI/流式仍需手工回归）
+- [x] 构建产物正确
+- [x] 性能符合预期
 
+### 4.6 本次执行结果（2026-03-04）
+
+- ✅ `typecheck` 通过
+- ✅ `build` 通过
+- ❌ `lint` 失败（`packages/translate-core/src` 共 9 个格式问题）
+- ❌ `test` 失败（`@lazytrans/translate-core` 无测试文件，`bun test` 退出 1）
+- ✅ 桌面端打包成功（生成 `.app` 与 `.dmg`）
 ---
 
-## 🚧 Phase 5: 发布准备（待执行）
-
-**目标**：准备 translate-core 的 npm 发布
-
-### 5.1 配置 Changesets
-
-**文件**：`.changeset/config.json`
-
-```json
-{
-  "$schema": "https://unpkg.com/@changesets/config@3.0.0/schema.json",
-  "changelog": "@changesets/cli/changelog",
-  "commit": false,
-  "fixed": [],
-  "linked": [],
-  "access": "public",
-  "baseBranch": "main",
-  "updateInternalDependencies": "patch",
-  "ignore": ["@lazytrans/desktop"]
-}
-```
-
-### 5.2 初始化 Changesets
-
-```bash
-bunx changeset init
-```
-
-### 5.3 添加第一个变更
-
-```bash
-bunx changeset
-# 选择 @lazytrans/translate-core
-# 选择 minor (0.1.0)
-# 描述: Initial release
-```
-
-### 5.4 版本升级
-
-```bash
-bunx changeset version
-```
-
-### 5.5 发布到 npm
-
-```bash
-# 登录 npm
-npm login
-
-# 发布
-bunx changeset publish
-
-# 或手动发布
-cd packages/translate-core
-bun publish
-```
-
-### 5.6 验证清单
-
-- [ ] Changesets 配置完成
-- [ ] CHANGELOG 生成正确
-- [ ] npm 发布成功
-- [ ] 包可正常安装使用
-
----
-
-## 🚧 Phase 6: 清理与文档（待执行）
+## 🚧 Phase 5: 清理与文档（待执行）
 
 **目标**：清理遗留文件，完善文档
 
-### 6.1 清理遗留文件
+### 5.1 清理遗留文件
 
 ```bash
 # 删除备份文件
@@ -656,29 +596,28 @@ bun run clean
 bun install
 ```
 
-### 6.2 更新根 README
+### 5.2 更新根 README
 
 **文件**：`README.md`
 
 ```markdown
 # LazyTrans Monorepo
-
 > 基于 Tauri 的桌面翻译工具
 
 ## 项目结构
 
-\`\`\`
+```
 lazyTrans/
 ├── apps/
 │   └── desktop/          # Tauri 桌面应用
 ├── packages/
 │   └── translate-core/   # 翻译核心库
 └── ...
-\`\`\`
+```
 
 ## 快速开始
 
-\`\`\`bash
+```bash
 # 安装依赖
 bun install
 
@@ -687,21 +626,21 @@ bun run dev:desktop
 
 # 构建应用
 bun run build:desktop
-\`\`\`
+```
 
 ## 开发指南
 
 - [Desktop 应用](./apps/desktop/README.md)
 - [翻译核心库](./packages/translate-core/README.md)
-\`\`\`
+```
 
-### 6.3 更新 ARCHITECTURE.md
+### 5.3 更新 ARCHITECTURE.md
 
 **文件**：`ARCHITECTURE.md`
 
 添加 monorepo 架构说明章节。
 
-### 6.4 创建 CONTRIBUTING.md
+### 5.4 创建 CONTRIBUTING.md
 
 **文件**：`CONTRIBUTING.md`
 
@@ -719,24 +658,24 @@ bun run build:desktop
 
 ### 添加新包
 
-\`\`\`bash
+```bash
 mkdir -p packages/new-package
 cd packages/new-package
 bun init
-\`\`\`
+```
 
 ### 添加新应用
 
-\`\`\`bash
+```bash
 mkdir -p apps/new-app
-\`\`\`
+```
 
 ## 发布流程
 
-使用 Changesets 管理版本和发布。
-\`\`\`
+当前阶段暂不纳入 npm 包发布流程，后续按需补充。
+```
 
-### 6.5 验证清单
+### 5.5 验证清单
 
 - [ ] 遗留文件清理完成
 - [ ] 文档更新完成
@@ -752,10 +691,9 @@ mkdir -p apps/new-app
 - [x] Phase 0: POC 验证 ✅ **100%**
 - [x] Phase 1: 迁移 Desktop 应用 ✅ **100%**
 - [x] Phase 2: 创建 translate-core 包 ✅ **100%**
-- [ ] Phase 3: 集成与兼容 - **0%**
-- [ ] Phase 4: 验证与优化 - **0%**
-- [ ] Phase 5: 发布准备 - **0%**
-- [ ] Phase 6: 清理与文档 - **0%**
+- [ ] Phase 3: 集成与兼容 - **83%**
+- [ ] Phase 4: 验证与优化 - **60%**（lint/test 与手工回归待完成）
+- [ ] Phase 5: 清理与文档 - **0%**
 
 ### 预计时间
 
@@ -763,12 +701,11 @@ mkdir -p apps/new-app
 |-------|---------|---------|------|
 | Phase 0 | 30分钟 | 15分钟 | ✅ 完成 |
 | Phase 1 | 1小时 | 1小时 | ✅ 完成 |
-| Phase 2 | 2小时 | - | ⏳ 待执行 |
-| Phase 3 | 1小时 | - | ⏳ 待执行 |
-| Phase 4 | 1小时 | - | ⏳ 待执行 |
+| Phase 2 | 2小时 | 2小时 | ✅ 完成 |
+| Phase 3 | 1小时 | 30分钟（兼容层接入+类型检查+启动验证） | 🚧 进行中 |
+| Phase 4 | 1小时 | 约10分钟（自动化验证 + 打包） | 🚧 进行中 |
 | Phase 5 | 30分钟 | - | ⏳ 待执行 |
-| Phase 6 | 30分钟 | - | ⏳ 待执行 |
-| **总计** | **6小时** | **~1小时15分钟** | **29%** |
+| **总计** | **5小时30分钟** | **~3小时55分钟** | **~71%** |
 
 ---
 
@@ -776,16 +713,16 @@ mkdir -p apps/new-app
 
 ### 立即执行
 
-1. **Phase 2**: 创建 `translate-core` 包（优先）
+1. **Phase 3**: 完成 desktop 翻译功能回归验证（Google/Bing/OpenAI/流式）
    ```bash
-   # 创建包并解除 workspace 依赖阻塞
-   bash scripts/create-translate-core.sh
+   # 启动后手动验证各翻译 Provider 与流式输出
+   bun --cwd apps/desktop run tauri dev
    ```
 
-2. **Phase 2**: 创建 translate-core 包
+2. **Phase 4**: 修复阻塞项后重跑验证
    ```bash
-   # 执行 Phase 2.1 创建包结构
-   bash scripts/create-translate-core.sh
+   # 修复 translate-core 的 lint 与测试阻塞项后重跑
+   bunx turbo run lint test
    ```
 
 ### 决策点
@@ -794,9 +731,6 @@ mkdir -p apps/new-app
   - 短期：保留（推荐）
   - 长期：逐步迁移到直接使用 `@lazytrans/translate-core`
 
-- [ ] **translate-core 的发布策略？**
-  - 公开发布到 npm
-  - 或仅内部使用
 
 - [ ] **是否需要添加更多共享包？**
   - `packages/ui` - 共享 UI 组件
@@ -858,7 +792,6 @@ mkdir -p apps/new-app
 
 - [Bun Workspaces 文档](https://bun.sh/docs/install/workspaces)
 - [Turborepo 文档](https://turbo.build/repo/docs)
-- [Changesets 文档](https://github.com/changesets/changesets)
 - [tsup 文档](https://tsup.egoist.dev/)
 
 ---

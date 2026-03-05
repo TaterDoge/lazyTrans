@@ -3,7 +3,7 @@
  * 基于 Google Translate 非官方 API 实现
  */
 
-import type { IProvider, ServiceCapability } from "@/services/core";
+import type { IProvider, ServiceCapability } from "../../core";
 import type {
   TranslateConfig,
   TranslateOptions,

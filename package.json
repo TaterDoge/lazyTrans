@@ -1,25 +1,28 @@
 {
-	"name": "@lazytrans/monorepo",
-	"version": "0.1.0",
-	"private": true,
-	"packageManager": "bun@1.2.0",
-	"workspaces": [
-		"apps/*",
-		"packages/*"
-	],
-	"scripts": {
-		"dev": "bunx turbo run dev --filter=@lazytrans/desktop",
-		"dev:desktop": "bun run --cwd apps/desktop tauri:dev",
-		"build": "bunx turbo run build",
-		"build:desktop": "bunx turbo run build --filter=@lazytrans/desktop",
-		"typecheck": "bunx turbo run typecheck",
-		"lint": "bunx turbo run lint",
-		"test": "bunx turbo run test",
-		"clean": "bunx turbo run clean"
-	},
-	"devDependencies": {
-		"turbo": "^2.5.0",
-		"@changesets/cli": "^2.29.6",
-		"typescript": "~5.9.3"
-	}
+  "name": "@lazytrans/monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "bun@1.3.10",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bunx turbo run dev --filter=@lazytrans/desktop",
+    "dev:desktop": "bun run --cwd apps/desktop tauri:dev",
+    "build": "bunx turbo run build",
+    "build:desktop": "bunx turbo run build --filter=@lazytrans/desktop",
+    "typecheck": "bunx turbo run typecheck",
+    "check": "bun run typecheck",
+    "lint": "bunx ultracite check .",
+    "fix": "bunx ultracite fix",
+    "check-fix": "bun run check && bun run fix",
+    "test": "bunx turbo run test",
+    "clean": "bunx turbo run clean"
+  },
+  "devDependencies": {
+    "turbo": "^2.8.13",
+    "@changesets/cli": "^2.30.0",
+    "typescript": "~5.9.3"
+  }
 }

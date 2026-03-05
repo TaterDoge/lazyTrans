@@ -21,9 +21,9 @@ export interface SettingsModule {
 }
 
 export interface SettingsModuleResult<T extends object> {
-  store: T;
-  setStore: SetStoreFunction<T>;
   actions: SettingsModule & { update(partial: Partial<T>): Promise<void> };
+  setStore: SetStoreFunction<T>;
+  store: T;
 }
 
 export function createSettingsModule<T extends object>(

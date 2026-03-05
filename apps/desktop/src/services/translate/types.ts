@@ -1,8 +1,5 @@
-/**
- * 翻译服务类型定义
- */
+import type { TranslateConfig as CoreTranslateConfig } from "@lazytrans/translate-core/translate/types";
 
-// 翻译Provider类型
 export type TranslateProvider =
   | "openai"
   | "deepl"
@@ -11,30 +8,11 @@ export type TranslateProvider =
   | "google"
   | "bing";
 
-// 翻译服务配置
-export interface TranslateConfig {
+export type TranslateConfig = Omit<CoreTranslateConfig, "provider"> & {
   provider: TranslateProvider;
-  apiKey: string;
-  apiEndpoint: string;
-  model: string;
-  sourceLang: string;
-  targetLang: string;
-  promptTemplate: string;
-  temperature: number;
-  maxTokens: number;
-}
+};
 
-// 翻译请求选项
-export interface TranslateOptions {
-  text: string;
-  sourceLang?: string;
-  targetLang?: string;
-  stream?: boolean;
-}
-
-// 翻译结果
-export interface TranslateResult {
-  text: string;
-  detectedLang?: string;
-  finished: boolean;
-}
+export type {
+  TranslateOptions,
+  TranslateResult,
+} from "@lazytrans/translate-core/translate/types";

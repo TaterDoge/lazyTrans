@@ -11,11 +11,11 @@ import type { Dictionary } from "@/i18n";
 export type ServiceTab = "translate" | "tts" | "ocr";
 
 // Tab 配置
-export const SERVICE_TABS: {
+export const SERVICE_TABS: Array<{
   id: ServiceTab;
   labelKey: keyof Dictionary & `settings.service.tab.${string}`;
   icon: string;
-}[] = [
+}> = [
   {
     id: "translate",
     labelKey: "settings.service.tab.translate",

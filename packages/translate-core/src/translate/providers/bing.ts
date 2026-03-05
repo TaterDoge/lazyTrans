@@ -3,7 +3,7 @@
  * 使用 Edge 浏览器的免费翻译接口
  */
 
-import type { IProvider, ServiceCapability } from "@/services/core";
+import type { IProvider, ServiceCapability } from "../../core";
 import type {
   TranslateConfig,
   TranslateOptions,

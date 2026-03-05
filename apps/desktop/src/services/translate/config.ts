@@ -1,29 +1,22 @@
-/**
- * 翻译服务配置 - 唯一数据源
- */
-
-import type { ProviderMeta } from "../core/types";
+import type { ProviderMeta } from "@lazytrans/translate-core";
 import type { TranslateProvider } from "./types";
-
-// ============ 类型定义 ============
 
 /** UI 选项格式 */
 export interface ProviderOption<T extends string = string> {
-  value: T;
-  label: string;
-  icon?: string;
   description?: string;
+  icon?: string;
+  label: string;
+  value: T;
 }
 
 /** 语言选项格式 */
 export interface LanguageOption {
-  value: string;
-  label: string;
   icon: string;
+  label: string;
+  value: string;
 }
 
-// ============ Provider 元信息 (唯一数据源) ============
-
+// Provider 元信息由业务层维护，避免污染 translate-core
 export const TRANSLATE_PROVIDERS: Record<TranslateProvider, ProviderMeta> = {
   openai: {
     id: "openai",
@@ -76,8 +69,6 @@ export const TRANSLATE_PROVIDERS: Record<TranslateProvider, ProviderMeta> = {
   },
 };
 
-// ============ 语言选项 ============
-
 export const LANGUAGE_OPTIONS: LanguageOption[] = [
   { value: "auto", label: "自动检测", icon: "🌐" },
   { value: "zh-CN", label: "简体中文", icon: "🇨🇳" },
@@ -91,12 +82,6 @@ export const LANGUAGE_OPTIONS: LanguageOption[] = [
   { value: "ru", label: "Русский", icon: "🇷🇺" },
 ];
 
-/** @deprecated 使用 LANGUAGE_OPTIONS 代替 */
-export const LANGUAGES = LANGUAGE_OPTIONS;
-
-// ============ 辅助函数 ============
-
-/** 获取所有 Provider 的 UI 选项 */
 export function getProviderOptions(): ProviderOption<TranslateProvider>[] {
   return Object.entries(TRANSLATE_PROVIDERS).map(([key, meta]) => ({
     value: key as TranslateProvider,
@@ -106,14 +91,12 @@ export function getProviderOptions(): ProviderOption<TranslateProvider>[] {
   }));
 }
 
-/** 获取指定 Provider 的元信息 */
 export function getProviderMeta(
   provider: TranslateProvider
 ): ProviderMeta | undefined {
   return TRANSLATE_PROVIDERS[provider];
 }
 
-/** 获取指定 Provider 的默认配置 */
 export function getProviderDefaults(provider: TranslateProvider): {
   apiEndpoint: string;
   model: string;
@@ -125,5 +108,4 @@ export function getProviderDefaults(provider: TranslateProvider): {
   };
 }
 
-// 预计算的 Provider 选项列表，避免重复计算
 export const TRANSLATE_PROVIDER_OPTIONS = getProviderOptions();
