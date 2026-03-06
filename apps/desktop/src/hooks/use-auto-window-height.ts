@@ -101,8 +101,16 @@ export function useAutoWindowHeight({
       }
     };
 
+    const scheduleWindowHeightSync = () => {
+      requestAnimationFrame(() => {
+        if (!disposed) {
+          syncWindowHeight().catch(console.error);
+        }
+      });
+    };
+
     const observer = new ResizeObserver(() => {
-      syncWindowHeight().catch(console.error);
+      scheduleWindowHeightSync();
     });
 
     const container = getContainer();
@@ -120,9 +128,7 @@ export function useAutoWindowHeight({
         return currentWindow.setSizeConstraints({ maxHeight });
       })
       .finally(() => {
-        if (!disposed) {
-          syncWindowHeight().catch(console.error);
-        }
+        scheduleWindowHeightSync();
       });
 
     onCleanup(() => {

@@ -54,6 +54,10 @@ export const dict = {
   translator: {
     settingsTooltip: "Settings, cmd+",
     translate: "Translate",
+    translating: "Translating...",
+    emptyResult: "No translation result yet",
+    translateFailed: "Translation failed, please try again",
+    noEnabledProviders: "Please enable translation services in settings",
   },
   shortcuts: {
     inputTranslate: "Translate Input",

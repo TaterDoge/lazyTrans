@@ -1,5 +1,5 @@
 import type { ProviderMeta } from "@lazytrans/translate-core";
-import type { TranslateProvider } from "./types";
+import type { ProviderConfig, TranslateProvider } from "./types";
 
 /** UI 选项格式 */
 export interface ProviderOption<T extends string = string> {
@@ -105,6 +105,23 @@ export function getProviderDefaults(provider: TranslateProvider): {
   return {
     apiEndpoint: meta?.defaultEndpoint || "",
     model: meta?.supportedModels?.[0] || "",
+  };
+}
+
+// 获取 provider 的完整默认配置
+export function getDefaultProviderConfig(
+  provider: TranslateProvider
+): ProviderConfig {
+  const defaults = getProviderDefaults(provider);
+  return {
+    provider,
+    apiKey: "",
+    apiEndpoint: defaults.apiEndpoint,
+    model: defaults.model,
+    promptTemplate: "",
+    temperature: 0.3,
+    maxTokens: 1024,
+    isCollapsed: false,
   };
 }
 

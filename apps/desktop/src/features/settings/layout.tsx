@@ -35,7 +35,7 @@ function SettingsLayout() {
   };
 
   return (
-    <SidebarProvider class="h-screen bg-background text-foreground">
+    <SidebarProvider class="h-screen bg-background text-foreground [--sidebar-width:12rem]!">
       <Sidebar collapsible="icon">
         <SidebarHeader
           class="cursor-grab pt-10 active:cursor-grabbing"

@@ -1,7 +1,8 @@
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
-import { createSignal } from "solid-js";
+import { createSignal, onMount } from "solid-js";
 import { Textarea } from "@/components/ui/textarea";
+import { initSettingsStore } from "@/stores/settings";
 import HoverWrapper from "../../components/hover-wrapper";
 import { useAutoWindowHeight } from "../../hooks/use-auto-window-height";
 import { useWindowShortcuts } from "../../hooks/use-window-shortcuts";
@@ -13,13 +14,23 @@ import {
   setAlwaysOnTop,
   showWindow,
 } from "../../utils/window";
+import { TranslateResultList } from "./components";
 
+/**
+ * 翻译器主组件
+ * 负责输入框、工具栏和窗口控制
+ * 翻译结果展示由 TranslateResultList 组件处理
+ */
 function Translator() {
   const { t } = useI18n();
-  const [sourceText, setSourceText] = createSignal("");
+  const [inputText, setInputText] = createSignal("");
+  const [translateText, setTranslateText] = createSignal("", {
+    equals: false,
+  });
   const [pinned, setPinned] = createSignal(false);
   const [bouncing, setBouncing] = createSignal(false);
   const [copyStatus, setCopyStatus] = createSignal(false);
+  const [isComposing, setIsComposing] = createSignal(false);
   const currentWindow = getCurrentWebviewWindow();
   let rootRef: HTMLDivElement | null = null;
 
@@ -27,6 +38,13 @@ function Translator() {
     getContainer: () => rootRef,
   });
 
+  onMount(() => {
+    initSettingsStore({ mode: "all", scheduleDeferred: false }).catch(
+      (error) => {
+        console.error("[settings] translator 初始化失败", error);
+      }
+    );
+  });
   const handleDragStart = (event: PointerEvent) => {
     if (event.button !== 0) {
       return;
@@ -59,7 +77,7 @@ function Translator() {
   // 复制翻译内容
   const handleCopy = async () => {
     setCopyStatus(true);
-    await writeText(sourceText());
+    await writeText(inputText());
     setTimeout(() => setCopyStatus(false), 2000);
   };
 
@@ -99,12 +117,23 @@ function Translator() {
         </div>
       </div>
 
+      {/* 输入区域 */}
       <div class="rounded-lg border p-0.5">
         <Textarea
           autofocus
           class="field-sizing-content max-h-[350px] min-h-20 w-full resize-none overflow-y-auto border-none px-2 text-sm focus:outline-none"
-          onInput={(e) => setSourceText(e.currentTarget.value)}
-          value={sourceText()}
+          onCompositionEnd={() => setIsComposing(false)}
+          onCompositionStart={() => setIsComposing(true)}
+          onInput={(e) => setInputText(e.currentTarget.value)}
+          onKeyDown={(e) => {
+            const isImeComposing =
+              isComposing() || e.isComposing || e.keyCode === 229;
+            if (e.key === "Enter" && !e.shiftKey && !isImeComposing) {
+              e.preventDefault();
+              setTranslateText(inputText());
+            }
+          }}
+          value={inputText()}
         />
 
         {/* 翻译内容源工具栏 */}
@@ -127,6 +156,11 @@ function Translator() {
             </HoverWrapper>
           </div>
         </div>
+      </div>
+
+      {/* 翻译结果列表 - 组件化，内部处理多服务翻译 */}
+      <div class="rounded-lg border p-2">
+        <TranslateResultList text={translateText()} />
       </div>
     </div>
   );

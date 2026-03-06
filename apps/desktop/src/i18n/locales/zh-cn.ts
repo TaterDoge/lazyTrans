@@ -54,6 +54,10 @@ export const dict = {
   translator: {
     settingsTooltip: "设置, cmd+",
     translate: "输入翻译",
+    translating: "翻译中...",
+    emptyResult: "暂无翻译结果",
+    translateFailed: "翻译失败，请稍后重试",
+    noEnabledProviders: "请先在设置中启用翻译服务",
   },
   shortcuts: {
     inputTranslate: "输入翻译",

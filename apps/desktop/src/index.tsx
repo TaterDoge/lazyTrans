@@ -3,6 +3,7 @@ import {
   createRouter,
   RouterProvider,
 } from "@tanstack/solid-router";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { render } from "solid-js/web";
 import { useTheme } from "./hooks/use-theme";
 import { I18nProvider } from "./i18n";
@@ -46,10 +47,18 @@ function App() {
   );
 }
 
-async function bootstrap() {
-  await initSettingsStore();
-
+function bootstrap() {
   render(() => <App />, document.getElementById("root") as HTMLElement);
+
+  const currentWindow = getCurrentWebviewWindow();
+  const isSettingsWindow = currentWindow.label === "settings";
+
+  initSettingsStore({
+    mode: isSettingsWindow ? "all" : "critical",
+    scheduleDeferred: !isSettingsWindow,
+  }).catch((error) => {
+    console.error("[settings] 初始化失败", error);
+  });
 }
 
 bootstrap();
