@@ -3,6 +3,7 @@
   "globalDependencies": ["bun.lock", "turbo.json", "tsconfig.base.json"],
   "tasks": {
     "dev": {
+      "dependsOn": ["^build"],
       "cache": false,
       "persistent": true
     },

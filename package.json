@@ -8,7 +8,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "bunx turbo run dev --filter=@lazytrans/desktop",
+    "dev": "bunx turbo run dev",
     "dev:desktop": "bun run --cwd apps/desktop tauri:dev",
     "build": "bunx turbo run build",
     "build:desktop": "bunx turbo run build --filter=@lazytrans/desktop",
