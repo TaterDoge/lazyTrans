@@ -94,16 +94,12 @@ export const TranslateSettings: VoidComponent = () => {
   const providerMeta = () => getProviderMeta(selectedProvider());
 
   // 获取当前选中的 provider 配置
-  const currentProviderConfig = (): ProviderConfig | undefined => {
-    return translateConfig.providers.find(
-      (p) => p.provider === selectedProvider()
-    );
-  };
+  const currentProviderConfig = (): ProviderConfig | undefined =>
+    translateConfig.providers.find((p) => p.provider === selectedProvider());
 
   // 判断 provider 是否启用（存在于 providers 数组中）
-  const isEnabled = (providerId: TranslateProvider) => {
-    return translateConfig.providers.some((p) => p.provider === providerId);
-  };
+  const isEnabled = (providerId: TranslateProvider) =>
+    translateConfig.providers.some((p) => p.provider === providerId);
 
   // 切换 provider 启用状态
   const toggleEnabled = (providerId: TranslateProvider) => {

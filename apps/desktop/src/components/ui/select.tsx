@@ -10,23 +10,17 @@ const Select = <Option, OptGroup = never, T extends ValidComponent = "div">(
     T,
     SelectPrimitive.SelectRootProps<Option, OptGroup, T>
   >
-) => {
-  return <SelectPrimitive.Root data-slot="select" {...props} />;
-};
+) => <SelectPrimitive.Root data-slot="select" {...props} />;
 
 const SelectValue = <Option, T extends ValidComponent = "span">(
   props: PolymorphicProps<T, SelectPrimitive.SelectValueProps<Option, T>>
-) => {
-  return <SelectPrimitive.Value data-slot="select-value" {...props} />;
-};
+) => <SelectPrimitive.Value data-slot="select-value" {...props} />;
 
 const SelectHiddenSelect: Component<SelectPrimitive.SelectHiddenSelectProps> = (
   props
-) => {
-  return (
-    <SelectPrimitive.HiddenSelect data-slot="select-hidden-select" {...props} />
-  );
-};
+) => (
+  <SelectPrimitive.HiddenSelect data-slot="select-hidden-select" {...props} />
+);
 
 type SelectTriggerProps<T extends ValidComponent = "button"> =
   SelectPrimitive.SelectTriggerProps<T> & {
@@ -144,9 +138,9 @@ const SelectItem = <T extends ValidComponent = "li">(
 
 export {
   Select,
-  SelectValue,
-  SelectHiddenSelect,
-  SelectTrigger,
   SelectContent,
+  SelectHiddenSelect,
   SelectItem,
+  SelectTrigger,
+  SelectValue,
 };

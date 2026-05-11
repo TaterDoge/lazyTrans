@@ -5,25 +5,21 @@ import { mergeProps, splitProps } from "solid-js";
 
 import { cn } from "@/utils";
 
-const Sheet: Component<SheetPrimitive.DialogRootProps> = (props) => {
-  return <SheetPrimitive.Root data-slot="sheet" {...props} />;
-};
+const Sheet: Component<SheetPrimitive.DialogRootProps> = (props) => (
+  <SheetPrimitive.Root data-slot="sheet" {...props} />
+);
 
 const SheetTrigger = <T extends ValidComponent = "button">(
   props: PolymorphicProps<T, SheetPrimitive.DialogTriggerProps<T>>
-) => {
-  return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />;
-};
+) => <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />;
 
 const SheetClose = <T extends ValidComponent = "button">(
   props: PolymorphicProps<T, SheetPrimitive.DialogCloseButtonProps<T>>
-) => {
-  return <SheetPrimitive.CloseButton data-slot="sheet-close" {...props} />;
-};
+) => <SheetPrimitive.CloseButton data-slot="sheet-close" {...props} />;
 
-const SheetPortal: Component<SheetPrimitive.DialogPortalProps> = (props) => {
-  return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />;
-};
+const SheetPortal: Component<SheetPrimitive.DialogPortalProps> = (props) => (
+  <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />
+);
 
 type SheetOverlayProps<T extends ValidComponent = "div"> =
   SheetPrimitive.DialogOverlayProps<T> & {
@@ -167,11 +163,11 @@ const SheetDescription = <T extends ValidComponent = "p">(
 
 export {
   Sheet,
-  SheetTrigger,
   SheetClose,
   SheetContent,
-  SheetHeader,
-  SheetFooter,
-  SheetTitle,
   SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
 };

@@ -103,4 +103,4 @@ const TabsIndicator = <T extends ValidComponent = "div">(
   );
 };
 
-export { Tabs, TabsList, TabsTrigger, TabsContent, TabsIndicator };
+export { Tabs, TabsContent, TabsIndicator, TabsList, TabsTrigger };

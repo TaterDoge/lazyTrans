@@ -3,78 +3,30 @@ import { generalActions } from "./general.store";
 import { translateActions } from "./services/translate.store";
 import { shortcutsActions } from "./shortcuts.store";
 
-type SettingsInitMode = "critical" | "all";
+const settingsModules: SettingsModule[] = [
+  generalActions,
+  shortcutsActions,
+  translateActions,
+];
 
-type InitSettingsStoreOptions = {
-  mode?: SettingsInitMode;
-  scheduleDeferred?: boolean;
-};
+let settingsInitPromise: Promise<void> | null = null;
 
-const criticalModules: SettingsModule[] = [generalActions, shortcutsActions];
-const deferredModules: SettingsModule[] = [translateActions];
-
-const loadedModules = new Set<SettingsModule>();
-let criticalInitPromise: Promise<void> | null = null;
-let allInitPromise: Promise<void> | null = null;
-let deferredScheduled = false;
-
-async function loadModules(modules: SettingsModule[]) {
+async function loadModules() {
   const store = await getStore();
-  await Promise.all(
-    modules.map(async (module) => {
-      if (loadedModules.has(module)) {
-        return;
-      }
-      await module.load(store);
-      loadedModules.add(module);
-    })
-  );
+  await Promise.all(settingsModules.map((module) => module.load(store)));
 }
 
-function ensureCriticalModulesLoaded() {
-  if (!criticalInitPromise) {
-    criticalInitPromise = loadModules(criticalModules);
+function ensureSettingsLoaded() {
+  if (!settingsInitPromise) {
+    settingsInitPromise = loadModules().catch((error) => {
+      settingsInitPromise = null;
+      throw error;
+    });
   }
-  return criticalInitPromise;
+
+  return settingsInitPromise;
 }
 
-function ensureAllModulesLoaded() {
-  if (!allInitPromise) {
-    allInitPromise = (async () => {
-      await ensureCriticalModulesLoaded();
-      await loadModules(deferredModules);
-    })();
-  }
-  return allInitPromise;
-}
-
-function scheduleDeferredSettingsLoad() {
-  if (deferredScheduled) {
-    return;
-  }
-
-  deferredScheduled = true;
-  setTimeout(() => {
-    ensureAllModulesLoaded().catch((error) =>
-      console.error("[settings] 延迟加载失败", error)
-    );
-  }, 0);
-}
-
-export async function initSettingsStore(
-  options: InitSettingsStoreOptions = {}
-) {
-  const mode = options.mode ?? "critical";
-  const scheduleDeferred = options.scheduleDeferred ?? mode === "critical";
-
-  if (mode === "all") {
-    await ensureAllModulesLoaded();
-    return;
-  }
-
-  await ensureCriticalModulesLoaded();
-
-  if (scheduleDeferred) {
-    scheduleDeferredSettingsLoad();
-  }
+export async function initSettingsStore() {
+  await ensureSettingsLoaded();
 }

@@ -8,9 +8,7 @@ import { showWindow } from "./utils/window";
 
 function Daemon() {
   onMount(() => {
-    initSettingsStore({ mode: "critical", scheduleDeferred: false }).catch(
-      (error) => console.error("[settings] daemon 初始化失败", error)
-    );
+    initSettingsStore();
   });
 
   useTray();

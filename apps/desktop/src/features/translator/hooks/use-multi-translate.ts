@@ -128,7 +128,7 @@ export function useMultiTranslate(text: Accessor<string>) {
     if (!settingsReadyPromise) {
       settingsReadyPromise = Promise.all([
         getTranslateFn(),
-        initSettingsStore({ mode: "all", scheduleDeferred: false }),
+        initSettingsStore(),
       ])
         .then(() => undefined)
         .catch((error) => {

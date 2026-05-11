@@ -9,9 +9,9 @@ const TooltipTrigger = <T extends ValidComponent = "button">(
   props: PolymorphicProps<T, TooltipPrimitive.TooltipTriggerProps<T>>
 ) => <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />;
 
-const Tooltip: Component<TooltipPrimitive.TooltipRootProps> = (props) => {
-  return <TooltipPrimitive.Root data-slot="tooltip" {...props} />;
-};
+const Tooltip: Component<TooltipPrimitive.TooltipRootProps> = (props) => (
+  <TooltipPrimitive.Root data-slot="tooltip" {...props} />
+);
 
 type TooltipContentProps<T extends ValidComponent = "div"> =
   TooltipPrimitive.TooltipContentProps<T> & {
@@ -43,4 +43,4 @@ const TooltipContent = <T extends ValidComponent = "div">(
   );
 };
 
-export { Tooltip, TooltipTrigger, TooltipContent };
+export { Tooltip, TooltipContent, TooltipTrigger };

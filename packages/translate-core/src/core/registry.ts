@@ -42,7 +42,7 @@ class ServiceRegistry {
   ): T | undefined {
     const typeProviders = this.providers.get(type);
     if (!typeProviders) {
-      return undefined;
+      return;
     }
 
     const Provider = typeProviders.get(name);

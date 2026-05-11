@@ -14,4 +14,4 @@ const { store: generalStore, actions: generalActions } =
     theme: "system",
   });
 
-export { generalStore, generalActions };
+export { generalActions, generalStore };

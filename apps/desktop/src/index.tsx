@@ -3,11 +3,11 @@ import {
   createRouter,
   RouterProvider,
 } from "@tanstack/solid-router";
-import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { render } from "solid-js/web";
 import { useTheme } from "./hooks/use-theme";
 import { I18nProvider } from "./i18n";
 import "./index.css";
+import { onMount } from "solid-js";
 import { routeTree } from "./routeTree.gen";
 import { initSettingsStore } from "./stores/settings";
 
@@ -40,6 +40,10 @@ declare module "@tanstack/solid-router" {
 function App() {
   useTheme();
 
+  onMount(() => {
+    initSettingsStore();
+  });
+
   return (
     <I18nProvider>
       <RouterProvider router={router} />
@@ -47,26 +51,4 @@ function App() {
   );
 }
 
-function bootstrap() {
-  render(() => <App />, document.getElementById("root") as HTMLElement);
-
-  const currentWindow = getCurrentWebviewWindow();
-  const isSettingsWindow = currentWindow.label === "settings";
-  const isTranslatorWindow = currentWindow.label === "translator";
-  const shouldLoadAllSettings = isSettingsWindow || isTranslatorWindow;
-
-  initSettingsStore({
-    mode: shouldLoadAllSettings ? "all" : "critical",
-    scheduleDeferred: !shouldLoadAllSettings,
-  }).catch((error) => {
-    console.error("[settings] 初始化失败", error);
-  });
-
-  if (isTranslatorWindow) {
-    import("@/services/translate").catch((error) => {
-      console.error("[translator] 预热失败", error);
-    });
-  }
-}
-
-bootstrap();
+render(() => <App />, document.getElementById("root") as HTMLElement);
