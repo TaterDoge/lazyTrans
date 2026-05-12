@@ -33,4 +33,4 @@ export interface TranslateConfig {
 export type {
   TranslateOptions,
   TranslateResult,
-} from "@lazytrans/translate-core/translate/types";
+} from "@/services/translate-core/translate/types";

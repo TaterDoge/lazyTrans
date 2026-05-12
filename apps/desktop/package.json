@@ -24,7 +24,7 @@
     "@fontsource-variable/inter": "^5.2.8",
     "@kobalte/core": "^0.13.11",
     "@dnd-kit/solid": "^0.4.0",
-    "@lazytrans/translate-core": "workspace:*",
+
     "@solid-primitives/i18n": "^2.2.1",
     "@solidjs/router": "^0.16.1",
     "@tanstack/history": "^1.161.6",
@@ -48,6 +48,7 @@
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
+    "@lazytrans/typescript-config": "workspace:*",
     "@biomejs/biome": "^2.4.15",
     "@iconify-json/line-md": "^1.2.16",
     "@iconify-json/lineicons": "^1.2.6",

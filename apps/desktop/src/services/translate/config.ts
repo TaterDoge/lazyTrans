@@ -1,4 +1,4 @@
-import type { ProviderMeta } from "@lazytrans/translate-core";
+import type { ProviderMeta } from "@/services/translate-core";
 import type { ProviderConfig, TranslateProvider } from "./types";
 
 /** 语言选项格式 */
