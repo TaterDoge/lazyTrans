@@ -1,0 +1,13 @@
+{
+  "name": "@lazytrans/typescript-config",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "exports": {
+    "./base.json": "./base.json",
+    "./solid-app.json": "./solid-app.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

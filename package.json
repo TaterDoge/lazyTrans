@@ -21,6 +21,7 @@
     "clean": "bunx turbo run clean"
   },
   "devDependencies": {
+    "@lazytrans/typescript-config": "workspace:*",
     "turbo": "^2.9.12",
     "@changesets/cli": "^2.31.0",
     "typescript": "~6.0.3"

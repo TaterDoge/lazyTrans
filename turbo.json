@@ -1,6 +1,11 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": ["bun.lock", "turbo.json", "tsconfig.base.json"],
+  "globalDependencies": [
+    "bun.lock",
+    "turbo.json",
+    "tsconfig.base.json",
+    "packages/typescript-config/*.json"
+  ],
   "tasks": {
     "dev": {
       "dependsOn": ["^build"],
