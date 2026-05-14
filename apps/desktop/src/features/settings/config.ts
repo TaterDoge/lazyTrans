@@ -8,6 +8,7 @@ export type SettingsMenuItem = {
   labelKey: keyof Dictionary & `settings.menu.${string}`;
   to: RouteTo;
   icon: string;
+  fullBleed?: boolean;
 };
 
 export const settingsMenuItems: SettingsMenuItem[] = [
@@ -28,6 +29,7 @@ export const settingsMenuItems: SettingsMenuItem[] = [
     icon: "icon-[tabler--cloud-cog]",
     labelKey: "settings.menu.service",
     to: "/settings/service",
+    fullBleed: true,
   },
   {
     id: "shortcuts",

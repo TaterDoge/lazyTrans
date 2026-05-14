@@ -1,7 +1,8 @@
-import { Link, Outlet } from "@tanstack/solid-router";
+import { Link, Outlet, useLocation } from "@tanstack/solid-router";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { For } from "solid-js";
 import { useWindowShortcuts } from "@/hooks/use-window-shortcuts";
+import { cn } from "@/utils";
 import { hideWindow } from "@/utils/window";
 import {
   Sidebar,
@@ -33,6 +34,12 @@ function SettingsLayout() {
     }
     currentWindow.startDragging().catch(console.error);
   };
+
+  const location = useLocation();
+  const isFullBleed = () =>
+    settingsMenuItems.some(
+      (item) => item.fullBleed && location().pathname === item.to
+    );
 
   return (
     <SidebarProvider class="h-screen bg-background text-foreground [--sidebar-width:12rem]!">
@@ -83,7 +90,7 @@ function SettingsLayout() {
         >
           <SidebarTrigger class="cursor-pointer" />
         </header>
-        <main class="flex-1 overflow-y-scroll p-8">
+        <main class={cn("flex-1 overflow-y-scroll", !isFullBleed() && "p-8")}>
           <Outlet />
         </main>
       </SidebarInset>

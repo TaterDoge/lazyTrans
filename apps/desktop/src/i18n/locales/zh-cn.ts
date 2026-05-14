@@ -23,6 +23,7 @@ export const dict = {
     },
     service: {
       title: "服务设置",
+      providerSearchPlaceholder: "搜索服务提供商...",
       tab: {
         translate: "翻译",
         tts: "语音",
