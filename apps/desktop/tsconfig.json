@@ -2,6 +2,7 @@
   "extends": "@lazytrans/typescript-config/solid-app.json",
   "compilerOptions": {
     "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
     "paths": {
       "@/*": ["./src/*"]
     }
