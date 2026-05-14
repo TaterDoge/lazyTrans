@@ -40,25 +40,20 @@ export const GOOGLE_LANGUAGES: Record<string, string> = {
   he: "he",
 };
 
-// Google 翻译词典结果类型（解析词典模式返回值时使用）
-// 目前仅使用翻译模式，词典模式可用于未来扩展
+type GoogleSentence = [string | null, string | null, ...unknown[]];
 
-type GoogleResultData = [
-  Array<[string | null, string | null, string | null, string | null] | null>,
-  [string, string, [string, string][]][] | null,
-  unknown,
-  unknown,
-  unknown,
-  unknown,
-  unknown,
-  unknown,
-  unknown,
-  unknown,
-  unknown,
-  unknown,
-  unknown,
-  [[string, number, number, number][]][] | null,
-];
+type GoogleResultData = [Array<GoogleSentence | null>, unknown, string?];
+
+interface GoogleProxyResult {
+  code?: number;
+  msg?: string;
+  text?: string;
+}
+
+interface GoogleClientsResult {
+  sentences: Array<{ trans?: string }>;
+  src?: string;
+}
 
 export class GoogleTranslateProvider
   implements IProvider<TranslateConfig, TranslateOptions, TranslateResult>
@@ -66,8 +61,9 @@ export class GoogleTranslateProvider
   readonly name = "google";
   readonly type = "translate" as const;
 
-  // 默认 URL
-  private readonly defaultUrl = "https://translate.google.com";
+  // 默认使用无需 token 的 Google Translate API 域名。
+  private readonly defaultUrl = "https://translate.googleapis.com";
+  private readonly legacyDefaultUrl = "https://translate.google.com";
 
   validateConfig(_config: TranslateConfig): Promise<boolean> {
     // Google 翻译不需要 API Key，只需要有效的端点
@@ -80,15 +76,13 @@ export class GoogleTranslateProvider
   ): Promise<TranslateResult> {
     const { text, sourceLang = "auto", targetLang = "zh-CN" } = options;
 
-    // 获取自定义 URL 或使用默认
-    const baseUrl = config.apiEndpoint || this.defaultUrl;
+    // 旧版本持久化的默认端点会继续走这里，避免用户需要手动重置设置。
+    const baseUrl = this.resolveBaseUrl(config.apiEndpoint);
     const url = this.buildUrl(baseUrl, sourceLang, targetLang, text);
 
     const response = await fetch(url, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { Accept: "application/json" },
     });
 
     if (!response.ok) {
@@ -119,57 +113,92 @@ export class GoogleTranslateProvider
       client: "gtx",
       sl: GOOGLE_LANGUAGES[from] || from,
       tl: GOOGLE_LANGUAGES[to] || to,
-      hl: GOOGLE_LANGUAGES[to] || to,
-      ie: "UTF-8",
-      oe: "UTF-8",
-      otf: "1",
-      ssel: "0",
-      tsel: "0",
-      kc: "7",
+      dt: "t",
       q: text,
     });
 
-    // dt 参数控制返回的数据类型
-    const dtParams =
-      "dt=at&dt=bd&dt=ex&dt=ld&dt=md&dt=qca&dt=rw&dt=rm&dt=ss&dt=t";
+    return `${url}/translate_a/single?${params.toString()}`;
+  }
 
-    return `${url}/translate_a/single?${dtParams}&${params.toString()}`;
+  private resolveBaseUrl(apiEndpoint: string | undefined): string {
+    const endpoint = apiEndpoint?.trim();
+    if (!endpoint) {
+      return this.defaultUrl;
+    }
+
+    const normalizedEndpoint = endpoint.endsWith("/")
+      ? endpoint.slice(0, -1)
+      : endpoint;
+
+    return normalizedEndpoint === this.legacyDefaultUrl
+      ? this.defaultUrl
+      : endpoint;
   }
 
   private parseResult(result: unknown): TranslateResult {
-    const data = result as GoogleResultData;
-
-    // 词典模式 (当 result[1] 存在时，表示查询单词)
-    if (data[1]) {
-      // 返回翻译文本
-      let translatedText = "";
-      if (data[0]) {
-        for (const r of data[0]) {
-          if (r?.[0]) {
-            translatedText += r[0];
-          }
-        }
+    if (this.isProxyResult(result)) {
+      if (result.code !== undefined && result.code !== 0) {
+        throw new Error(
+          `Google Translate proxy error: ${result.msg || "unknown"}`
+        );
       }
+
+      if (typeof result.text === "string") {
+        return {
+          text: result.text.trim(),
+          finished: true,
+        };
+      }
+    }
+
+    if (this.isClientsResult(result)) {
       return {
-        text: translatedText.trim(),
+        text: result.sentences
+          .map((sentence) => sentence.trans || "")
+          .join("")
+          .trim(),
+        detectedLang: result.src,
         finished: true,
       };
     }
 
-    // 翻译模式
+    if (!Array.isArray(result)) {
+      throw new Error("Google Translate API returned an invalid response");
+    }
+
+    const data = result as GoogleResultData;
+
+    if (!Array.isArray(data[0])) {
+      throw new Error(
+        "Google Translate API returned an invalid translation list"
+      );
+    }
+
     let target = "";
-    if (data[0]) {
-      for (const r of data[0]) {
-        if (r?.[0]) {
-          target += r[0];
-        }
+    for (const r of data[0]) {
+      if (r?.[0]) {
+        target += r[0];
       }
     }
 
     return {
       text: target.trim(),
+      detectedLang: data[2],
       finished: true,
     };
+  }
+
+  private isProxyResult(result: unknown): result is GoogleProxyResult {
+    return typeof result === "object" && result !== null && "text" in result;
+  }
+
+  private isClientsResult(result: unknown): result is GoogleClientsResult {
+    return (
+      typeof result === "object" &&
+      result !== null &&
+      "sentences" in result &&
+      Array.isArray((result as GoogleClientsResult).sentences)
+    );
   }
 
   getCapabilities(): ServiceCapability {

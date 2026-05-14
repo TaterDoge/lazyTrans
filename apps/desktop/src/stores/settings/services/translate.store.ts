@@ -3,16 +3,20 @@ import {
   TRANSLATE_PROVIDERS,
 } from "@/services/translate/config";
 import type {
+  BuiltinTranslateProvider,
   ProviderConfig,
   TranslateConfig,
   TranslateProvider,
 } from "@/services/translate/types";
+import { isCustomTranslateProvider } from "@/services/translate/types";
 import { createSettingsModule } from "../base";
 
-// 所有 provider 列表
-const ALL_PROVIDERS = Object.keys(TRANSLATE_PROVIDERS) as TranslateProvider[];
+// 默认展示的内置 provider 列表，自定义 OpenAI 由设置页添加按钮写入。
+const BUILTIN_PROVIDERS = Object.keys(
+  TRANSLATE_PROVIDERS
+) as BuiltinTranslateProvider[];
 
-const defaultEnabledProviders = ALL_PROVIDERS.filter(
+const defaultEnabledProviders = BUILTIN_PROVIDERS.filter(
   (provider) => !TRANSLATE_PROVIDERS[provider]?.requiresApiKey
 );
 
@@ -21,7 +25,7 @@ const defaultTranslateConfig: TranslateConfig = {
   providers: defaultEnabledProviders.map((provider) =>
     getDefaultProviderConfig(provider)
   ),
-  providerOrder: [...ALL_PROVIDERS],
+  providerOrder: [...BUILTIN_PROVIDERS],
   sourceLang: "auto",
   targetLang: "zh-CN",
 };
@@ -47,13 +51,13 @@ function normalizeProviderOrder(
   const normalized: TranslateProvider[] = [];
 
   for (const provider of order ?? []) {
-    if (ALL_PROVIDERS.includes(provider) && !seen.has(provider)) {
+    if (isKnownProvider(provider) && !seen.has(provider)) {
       seen.add(provider);
       normalized.push(provider);
     }
   }
 
-  for (const provider of ALL_PROVIDERS) {
+  for (const provider of BUILTIN_PROVIDERS) {
     if (!seen.has(provider)) {
       normalized.push(provider);
     }
@@ -68,8 +72,8 @@ function normalizeEnabledProviders(
   const seen = new Set<TranslateProvider>();
   const normalized: TranslateProvider[] = [];
 
-  for (const provider of providers ?? ALL_PROVIDERS) {
-    if (ALL_PROVIDERS.includes(provider) && !seen.has(provider)) {
+  for (const provider of providers ?? BUILTIN_PROVIDERS) {
+    if (isKnownProvider(provider) && !seen.has(provider)) {
       seen.add(provider);
       normalized.push(provider);
     }
@@ -85,10 +89,7 @@ function normalizeProviders(
   const normalized: ProviderConfig[] = [];
 
   for (const provider of providers ?? []) {
-    if (
-      !ALL_PROVIDERS.includes(provider.provider) ||
-      seen.has(provider.provider)
-    ) {
+    if (!isKnownProvider(provider.provider) || seen.has(provider.provider)) {
       continue;
     }
 
@@ -104,6 +105,13 @@ function normalizeProviders(
   return normalized;
 }
 
+function isKnownProvider(provider: TranslateProvider): boolean {
+  return (
+    BUILTIN_PROVIDERS.includes(provider as BuiltinTranslateProvider) ||
+    isCustomTranslateProvider(provider)
+  );
+}
+
 // 迁移旧配置到新配置
 function migrateConfig(
   saved: TranslateConfig | LegacyTranslateConfig | null,
@@ -111,7 +119,7 @@ function migrateConfig(
 ): TranslateConfig {
   // 如果已经是新结构，直接返回
   if (saved && "providers" in saved && Array.isArray(saved.providers)) {
-    const activeProvider = ALL_PROVIDERS.includes(saved.activeProvider)
+    const activeProvider = isKnownProvider(saved.activeProvider)
       ? saved.activeProvider
       : defaults.activeProvider;
     const providers = normalizeProviders(saved.providers);
@@ -119,7 +127,10 @@ function migrateConfig(
     return {
       activeProvider,
       providers,
-      providerOrder: normalizeProviderOrder(saved.providerOrder),
+      providerOrder: normalizeProviderOrder([
+        ...(saved.providerOrder ?? []),
+        ...providers.map((provider) => provider.provider),
+      ]),
       sourceLang: saved.sourceLang ?? defaults.sourceLang,
       targetLang: saved.targetLang ?? defaults.targetLang,
     };
@@ -130,13 +141,13 @@ function migrateConfig(
 
   // 从旧配置中提取全局设置
   const legacyProvider =
-    legacy?.provider && ALL_PROVIDERS.includes(legacy.provider)
+    legacy?.provider && isKnownProvider(legacy.provider)
       ? legacy.provider
       : "openai";
   const enabledProviders = normalizeEnabledProviders(legacy?.enabledProviders);
   const providerOrder = normalizeProviderOrder([
     ...enabledProviders,
-    ...ALL_PROVIDERS,
+    ...BUILTIN_PROVIDERS,
   ]);
 
   // 构建 providers 数组

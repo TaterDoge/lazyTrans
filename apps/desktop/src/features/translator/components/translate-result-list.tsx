@@ -6,7 +6,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useI18n } from "@/i18n";
-import { TRANSLATE_PROVIDERS } from "@/services/translate/config";
+import { getProviderMeta } from "@/services/translate/config";
 import { translateActions, translateConfig } from "@/stores/settings/services";
 import { cn } from "@/utils";
 import { useMultiTranslate } from "../hooks/use-multi-translate";
@@ -91,7 +91,7 @@ export function TranslateResultList(props: TranslateResultListProps) {
           <For each={results()}>
             {(item) => {
               const providerInfo = () =>
-                TRANSLATE_PROVIDERS[item.provider] || {
+                getProviderMeta(item.provider) || {
                   name: item.provider,
                   icon: "icon-[tabler--language]",
                 };

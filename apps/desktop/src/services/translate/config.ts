@@ -1,5 +1,10 @@
 import type { ProviderMeta } from "@/services/translate-core";
-import type { ProviderConfig, TranslateProvider } from "./types";
+import type {
+  BuiltinTranslateProvider,
+  ProviderConfig,
+  TranslateProvider,
+} from "./types";
+import { isCustomTranslateProvider } from "./types";
 
 /** 语言选项格式 */
 export interface LanguageOption {
@@ -9,7 +14,9 @@ export interface LanguageOption {
 }
 
 // Provider 元信息由业务层维护，避免污染 translate-core
-export const TRANSLATE_PROVIDERS: Record<TranslateProvider, ProviderMeta> = {
+export const TRANSLATE_PROVIDERS: Partial<
+  Record<BuiltinTranslateProvider, ProviderMeta>
+> = {
   openai: {
     id: "openai",
     name: "OpenAI",
@@ -18,14 +25,6 @@ export const TRANSLATE_PROVIDERS: Record<TranslateProvider, ProviderMeta> = {
     requiresApiKey: true,
     defaultEndpoint: "https://api.openai.com/v1",
     supportedModels: ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"],
-  },
-  deepl: {
-    id: "deepl",
-    name: "DeepL",
-    icon: "icon-[simple-icons--deepl]",
-    description: "DeepL 专业翻译服务",
-    requiresApiKey: true,
-    defaultEndpoint: "https://api.deepl.com/v2",
   },
   ollama: {
     id: "ollama",
@@ -36,20 +35,13 @@ export const TRANSLATE_PROVIDERS: Record<TranslateProvider, ProviderMeta> = {
     defaultEndpoint: "http://localhost:11434",
     supportedModels: ["llama3", "qwen2", "mistral"],
   },
-  custom: {
-    id: "custom",
-    name: "自定义",
-    icon: "icon-[tabler--api]",
-    description: "自定义 OpenAI 兼容 API",
-    requiresApiKey: true,
-  },
   google: {
     id: "google",
     name: "Google",
     icon: "icon-[simple-icons--google]",
     description: "Google 翻译 (免费)",
     requiresApiKey: false,
-    defaultEndpoint: "https://translate.google.com",
+    defaultEndpoint: "https://translate.googleapis.com",
   },
   bing: {
     id: "bing",
@@ -59,6 +51,14 @@ export const TRANSLATE_PROVIDERS: Record<TranslateProvider, ProviderMeta> = {
     requiresApiKey: false,
     defaultEndpoint: "https://api-edge.cognitive.microsofttranslator.com",
   },
+};
+
+const CUSTOM_OPENAI_PROVIDER_META: ProviderMeta = {
+  id: "custom",
+  name: "自定义",
+  icon: "icon-[tabler--api]",
+  description: "自定义 OpenAI 兼容 API",
+  requiresApiKey: true,
 };
 
 export const LANGUAGE_OPTIONS: LanguageOption[] = [
@@ -77,6 +77,10 @@ export const LANGUAGE_OPTIONS: LanguageOption[] = [
 export function getProviderMeta(
   provider: TranslateProvider
 ): ProviderMeta | undefined {
+  if (isCustomTranslateProvider(provider)) {
+    return CUSTOM_OPENAI_PROVIDER_META;
+  }
+
   return TRANSLATE_PROVIDERS[provider];
 }
 
@@ -84,7 +88,7 @@ export function getProviderDefaults(provider: TranslateProvider): {
   apiEndpoint: string;
   model: string;
 } {
-  const meta = TRANSLATE_PROVIDERS[provider];
+  const meta = getProviderMeta(provider);
   return {
     apiEndpoint: meta?.defaultEndpoint || "",
     model: meta?.supportedModels?.[0] || "",

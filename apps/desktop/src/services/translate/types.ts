@@ -1,10 +1,14 @@
+export type BuiltinTranslateProvider = "openai" | "ollama" | "google" | "bing";
+export type CustomTranslateProvider = "custom" | `custom:${string}`;
 export type TranslateProvider =
-  | "openai"
-  | "deepl"
-  | "ollama"
-  | "custom"
-  | "google"
-  | "bing";
+  | BuiltinTranslateProvider
+  | CustomTranslateProvider;
+
+export function isCustomTranslateProvider(
+  provider: string
+): provider is CustomTranslateProvider {
+  return provider === "custom" || provider.startsWith("custom:");
+}
 
 // 每个 provider 的独立配置
 export interface ProviderConfig {

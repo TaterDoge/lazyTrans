@@ -9,6 +9,7 @@ export { OpenAITranslateProvider } from "./openai";
 
 const BUILTIN_TRANSLATE_PROVIDERS = {
   openai: OpenAITranslateProvider,
+  custom: OpenAITranslateProvider,
   google: GoogleTranslateProvider,
   bing: BingTranslateProvider,
 } as const;
