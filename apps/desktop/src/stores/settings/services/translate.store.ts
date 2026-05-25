@@ -1,3 +1,4 @@
+import { translateServiceDefinition } from "@/services/service-config";
 import {
   getDefaultProviderConfig,
   TRANSLATE_PROVIDERS,
@@ -8,8 +9,11 @@ import type {
   TranslateConfig,
   TranslateProvider,
 } from "@/services/translate/types";
-import { isCustomTranslateProvider } from "@/services/translate/types";
 import { createSettingsModule } from "../base";
+import {
+  isKnownProvider as isKnownServiceProvider,
+  normalizeProviderOrder as normalizeServiceProviderOrder,
+} from "./provider-list.store";
 
 // 默认展示的内置 provider 列表，自定义 OpenAI 由设置页添加按钮写入。
 const BUILTIN_PROVIDERS = Object.keys(
@@ -47,23 +51,7 @@ interface LegacyTranslateConfig {
 function normalizeProviderOrder(
   order: TranslateProvider[] | undefined
 ): TranslateProvider[] {
-  const seen = new Set<TranslateProvider>();
-  const normalized: TranslateProvider[] = [];
-
-  for (const provider of order ?? []) {
-    if (isKnownProvider(provider) && !seen.has(provider)) {
-      seen.add(provider);
-      normalized.push(provider);
-    }
-  }
-
-  for (const provider of BUILTIN_PROVIDERS) {
-    if (!seen.has(provider)) {
-      normalized.push(provider);
-    }
-  }
-
-  return normalized;
+  return normalizeServiceProviderOrder(order, translateServiceDefinition);
 }
 
 function normalizeEnabledProviders(
@@ -106,10 +94,7 @@ function normalizeProviders(
 }
 
 function isKnownProvider(provider: TranslateProvider): boolean {
-  return (
-    BUILTIN_PROVIDERS.includes(provider as BuiltinTranslateProvider) ||
-    isCustomTranslateProvider(provider)
-  );
+  return isKnownServiceProvider(provider, translateServiceDefinition);
 }
 
 // 迁移旧配置到新配置

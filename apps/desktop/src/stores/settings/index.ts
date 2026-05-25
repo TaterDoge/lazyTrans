@@ -1,12 +1,14 @@
 import { getStore, type SettingsModule } from "./base";
 import { generalActions } from "./general.store";
-import { translateActions } from "./services/translate.store";
+import { ocrActions, translateActions, ttsActions } from "./services";
 import { shortcutsActions } from "./shortcuts.store";
 
 const settingsModules: SettingsModule[] = [
   generalActions,
   shortcutsActions,
   translateActions,
+  ttsActions,
+  ocrActions,
 ];
 
 let settingsInitPromise: Promise<void> | null = null;

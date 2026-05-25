@@ -15,7 +15,7 @@ const ServiceSettings: VoidComponent = () => {
   const { t } = useI18n();
 
   const serviceTabs = () => (
-    <TabsList class="h-auto w-full items-center gap-1 rounded-none bg-muted p-1">
+    <TabsList class="h-auto w-full items-center gap-1 bg-muted p-1">
       <For each={SERVICE_TABS}>
         {(tab) => (
           <TabsTrigger

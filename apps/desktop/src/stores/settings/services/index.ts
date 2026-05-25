@@ -3,10 +3,16 @@
  */
 
 import type { SettingsModule } from "../base";
+import { ocrActions } from "./ocr.store";
 import { translateActions } from "./translate.store";
+import { ttsActions } from "./tts.store";
 
 // 所有服务模块
-const serviceModules: SettingsModule[] = [translateActions];
+const serviceModules: SettingsModule[] = [
+  translateActions,
+  ttsActions,
+  ocrActions,
+];
 
 let loaded = false;
 
@@ -26,4 +32,6 @@ export async function initServiceStores(): Promise<void> {
 }
 
 // 导出各服务配置
+export { ocrActions, ocrConfig } from "./ocr.store";
 export { translateActions, translateConfig } from "./translate.store";
+export { ttsActions, ttsConfig } from "./tts.store";

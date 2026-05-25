@@ -29,6 +29,19 @@ export const dict = {
         tts: "TTS",
         ocr: "OCR",
       },
+      providerConfig: {
+        apiConfig: "API Configuration",
+        apiKey: "API Key",
+        apiEndpoint: "API Endpoint",
+        model: "Model",
+        advancedConfig: "Advanced Settings",
+        promptTemplate: "Custom Prompt",
+        promptTemplatePlaceholder: "Leave empty for default prompt...",
+        promptTemplateDesc:
+          "Customize the service prompt to adjust output style",
+        temperature: "Temperature",
+        temperatureDesc: "Higher values make output more random",
+      },
       translate: {
         provider: "Provider",
         apiConfig: "API Configuration",

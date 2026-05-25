@@ -1,24 +1,23 @@
 import { useSortable } from "@dnd-kit/solid/sortable";
-import type { VoidComponent } from "solid-js";
 import { Show } from "solid-js";
 import { Switch } from "@/components/ui/switch";
-import { getProviderMeta } from "@/services/translate/config";
-import type { TranslateProvider } from "@/services/translate/types";
+import type { ProviderMeta } from "@/services/translate-core";
 import { cn } from "@/utils";
 
-interface SortableProviderItemProps {
+interface SortableProviderItemProps<TProvider extends string> {
+  getProviderMeta: (providerId: TProvider) => ProviderMeta | undefined;
   index: number;
   isEnabled: boolean;
   isSelected: boolean;
-  onProviderClick: (providerId: TranslateProvider) => void;
-  onToggleEnabled: (providerId: TranslateProvider) => void;
-  providerId: TranslateProvider;
+  onProviderClick: (providerId: TProvider) => void;
+  onToggleEnabled: (providerId: TProvider) => void;
+  providerId: TProvider;
 }
 
-export const SortableProviderItem: VoidComponent<SortableProviderItemProps> = (
-  props
+export const SortableProviderItem = <TProvider extends string>(
+  props: SortableProviderItemProps<TProvider>
 ) => {
-  const meta = () => getProviderMeta(props.providerId);
+  const meta = () => props.getProviderMeta(props.providerId);
   const { ref, handleRef, isDragging } = useSortable({
     get id() {
       return props.providerId;

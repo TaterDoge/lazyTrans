@@ -29,6 +29,18 @@ export const dict = {
         tts: "语音",
         ocr: "识别",
       },
+      providerConfig: {
+        apiConfig: "API 配置",
+        apiKey: "API Key",
+        apiEndpoint: "API 地址",
+        model: "模型",
+        advancedConfig: "高级配置",
+        promptTemplate: "自定义提示词",
+        promptTemplatePlaceholder: "留空使用默认提示词...",
+        promptTemplateDesc: "自定义服务提示词，可用于调整输出风格",
+        temperature: "温度",
+        temperatureDesc: "较高的值会使输出更随机",
+      },
       translate: {
         provider: "服务提供商",
         apiConfig: "API 配置",
