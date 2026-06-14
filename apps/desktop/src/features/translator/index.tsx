@@ -2,17 +2,17 @@ import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { createSignal } from "solid-js";
 import { Textarea } from "@/components/ui/textarea";
-import HoverWrapper from "../../components/hover-wrapper";
-import { useAutoWindowHeight } from "../../hooks/use-auto-window-height";
-import { useWindowShortcuts } from "../../hooks/use-window-shortcuts";
-import { useI18n } from "../../i18n";
-import { cn } from "../../utils";
+import { cn } from "@/lib/utils";
 import {
   hideAllWindows,
   hideWindow,
   setAlwaysOnTop,
   showWindow,
-} from "../../utils/window";
+} from "@/lib/utils/window";
+import HoverWrapper from "../../components/hover-wrapper";
+import { useAutoWindowHeight } from "../../hooks/use-auto-window-height";
+import { useWindowShortcuts } from "../../hooks/use-window-shortcuts";
+import { useI18n } from "../../i18n";
 import { TranslateResultList } from "./components";
 
 /**
@@ -30,9 +30,17 @@ function Translator() {
   const [isComposing, setIsComposing] = createSignal(false);
   const currentWindow = getCurrentWebviewWindow();
   let rootRef: HTMLDivElement | null = null;
+  let scrollRef: HTMLDivElement | null = null;
+  let scrollContentRef: HTMLDivElement | null = null;
 
   useAutoWindowHeight({
     getContainer: () => rootRef,
+    getContentHeight: () =>
+      rootRef && scrollRef
+        ? rootRef.scrollHeight + scrollRef.scrollHeight - scrollRef.clientHeight
+        : undefined,
+    getObservedElements: () => [scrollRef, scrollContentRef],
+    maxHeightRatio: 0.9,
   });
 
   const handleDragStart = (event: PointerEvent) => {
@@ -73,7 +81,7 @@ function Translator() {
 
   return (
     <div
-      class="flex w-full flex-col gap-y-2 rounded-xl bg-background p-2 text-foreground"
+      class="flex max-h-screen w-full flex-col gap-y-2 rounded-xl bg-background p-2 text-foreground"
       ref={(el) => {
         rootRef = el;
       }}
@@ -107,50 +115,64 @@ function Translator() {
         </div>
       </div>
 
-      {/* 输入区域 */}
-      <div class="rounded-lg border p-0.5">
-        <Textarea
-          autofocus
-          class="field-sizing-content max-h-[350px] min-h-20 w-full resize-none overflow-y-auto border-none px-2 text-sm focus:outline-none"
-          onCompositionEnd={() => setIsComposing(false)}
-          onCompositionStart={() => setIsComposing(true)}
-          onInput={(e) => setInputText(e.currentTarget.value)}
-          onKeyDown={(e) => {
-            const isImeComposing =
-              isComposing() || e.isComposing || e.keyCode === 229;
-            if (e.key === "Enter" && !e.shiftKey && !isImeComposing) {
-              e.preventDefault();
-              setTranslateText(inputText());
-            }
+      <div
+        class="min-h-0 overflow-y-auto"
+        ref={(el) => {
+          scrollRef = el;
+        }}
+      >
+        <div
+          class="flex flex-col gap-y-2"
+          ref={(el) => {
+            scrollContentRef = el;
           }}
-          value={inputText()}
-        />
+        >
+          {/* 输入区域 */}
+          <div class="rounded-lg border p-0.5">
+            <Textarea
+              autofocus
+              class="field-sizing-content max-h-[250px] min-h-20 w-full resize-none overflow-y-auto border-none px-2 text-sm focus:outline-none"
+              onCompositionEnd={() => setIsComposing(false)}
+              onCompositionStart={() => setIsComposing(true)}
+              onInput={(e) => setInputText(e.currentTarget.value)}
+              onKeyDown={(e) => {
+                const isImeComposing =
+                  isComposing() || e.isComposing || e.keyCode === 229;
+                if (e.key === "Enter" && !e.shiftKey && !isImeComposing) {
+                  e.preventDefault();
+                  setTranslateText(inputText());
+                }
+              }}
+              value={inputText()}
+            />
 
-        {/* 翻译内容源工具栏 */}
-        <div class="flex justify-between p-2">
-          <div class="flex gap-x-1">
-            {/* 朗读 */}
-            <HoverWrapper onClick={handleRead}>
-              <span class="icon-[tabler--volume]" />
-            </HoverWrapper>
+            {/* 翻译内容源工具栏 */}
+            <div class="flex justify-between p-2">
+              <div class="flex gap-x-1">
+                {/* 朗读 */}
+                <HoverWrapper onClick={handleRead}>
+                  <span class="icon-[tabler--volume]" />
+                </HoverWrapper>
 
-            {/* 复制 */}
-            <HoverWrapper onClick={handleCopy}>
-              <span
-                class={cn({
-                  "icon-[tabler--copy]": !copyStatus(),
-                  "icon-[line-md--circle-twotone-to-confirm-circle-transition] text-green-500":
-                    copyStatus(),
-                })}
-              />
-            </HoverWrapper>
+                {/* 复制 */}
+                <HoverWrapper onClick={handleCopy}>
+                  <span
+                    class={cn({
+                      "icon-[tabler--copy]": !copyStatus(),
+                      "icon-[line-md--circle-twotone-to-confirm-circle-transition] text-green-500":
+                        copyStatus(),
+                    })}
+                  />
+                </HoverWrapper>
+              </div>
+            </div>
+          </div>
+
+          {/* 翻译结果列表 - 组件化，内部处理多服务翻译 */}
+          <div class="rounded-lg border p-2">
+            <TranslateResultList text={translateText()} />
           </div>
         </div>
-      </div>
-
-      {/* 翻译结果列表 - 组件化，内部处理多服务翻译 */}
-      <div class="rounded-lg border p-2">
-        <TranslateResultList text={translateText()} />
       </div>
     </div>
   );

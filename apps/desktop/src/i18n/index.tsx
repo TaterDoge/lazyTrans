@@ -12,7 +12,29 @@ import { dict as zhCN } from "./locales/zh-cn";
 import type { Locale, RawDictionary } from "./types";
 
 export type { Locale, RawDictionary } from "./types";
-export type Dictionary = Flatten<RawDictionary>;
+
+/**
+ * Flatten sometimes fails to generate dot-notation keys for top-level
+ * namespaces when the total dictionary complexity exceeds TypeScript's
+ * recursive type instantiation depth. We manually merge the global
+ * leaf keys so `t("global.xxx")` type-checks correctly.
+ */
+type GlobalLeafKeys = {
+  readonly [K in keyof RawDictionary["global"] as `global.${K}`]: RawDictionary["global"][K];
+};
+
+type SettingsServiceLeafKeys = {
+  readonly [K in keyof RawDictionary["settings"]["service"] as `settings.service.${K}`]: RawDictionary["settings"]["service"][K];
+};
+
+type ProviderConfigLeafKeys = {
+  readonly [K in keyof RawDictionary["settings"]["service"]["providerConfig"] as `settings.service.providerConfig.${K}`]: RawDictionary["settings"]["service"]["providerConfig"][K];
+};
+
+export type Dictionary = Flatten<RawDictionary> &
+  GlobalLeafKeys &
+  SettingsServiceLeafKeys &
+  ProviderConfigLeafKeys;
 
 const dictionaries: Record<Locale, RawDictionary> = {
   "zh-CN": zhCN,

@@ -1,27 +1,41 @@
-import { createEffect, onCleanup } from "solid-js";
+import { createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 import { generalStore } from "../stores/settings/general.store";
 
+type ResolvedTheme = "light" | "dark";
+
+const getSystemTheme = (): ResolvedTheme =>
+  window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+
 export function useTheme() {
+  const [systemTheme, setSystemTheme] = createSignal<ResolvedTheme>(
+    getSystemTheme()
+  );
+
   createEffect(() => {
     const theme = generalStore.theme;
-    const root = document.documentElement;
 
-    if (theme === "dark") {
-      root.classList.add("dark");
+    if (theme !== "system") {
       return;
     }
 
-    if (theme === "light") {
-      root.classList.remove("dark");
-      return;
-    }
-
-    // system: 跟随系统偏好
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    root.classList.toggle("dark", mq.matches);
-    const handler = (e: MediaQueryListEvent) =>
-      root.classList.toggle("dark", e.matches);
+    const syncSystemTheme = () => setSystemTheme(getSystemTheme());
+
+    syncSystemTheme();
+    const handler = () => syncSystemTheme();
     mq.addEventListener("change", handler);
     onCleanup(() => mq.removeEventListener("change", handler));
   });
+
+  const theme = createMemo<ResolvedTheme>(() => {
+    const themeSetting = generalStore.theme;
+
+    return themeSetting === "system" ? systemTheme() : themeSetting;
+  });
+
+  createEffect(() => {
+    document.documentElement.classList.toggle("dark", theme() === "dark");
+  });
+
+  return theme;
 }

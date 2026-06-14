@@ -6,6 +6,7 @@ import {
   onCleanup,
   untrack,
 } from "solid-js";
+import { getTranslateProviderMeta } from "@/services/service-config";
 import type {
   ProviderConfig,
   TranslateProvider,
@@ -26,6 +27,7 @@ interface ProviderRuntimeState {
 interface TranslationProviderSnapshot {
   apiEndpoint?: string;
   apiKey?: string;
+  apiMode?: ProviderConfig["apiMode"];
   maxTokens?: number;
   model?: string;
   promptTemplate?: string;
@@ -91,7 +93,9 @@ export function useMultiTranslate(text: Accessor<string>) {
   let settingsReadyPromise: Promise<void> | null = null;
 
   const enabledProviders = createMemo(() =>
-    sortProviders(translateConfig.providers)
+    sortProviders(
+      translateConfig.providers.filter((provider) => provider.enabled !== false)
+    )
   );
 
   const translationProviders = createMemo<TranslationProviderSnapshot[]>(() =>
@@ -99,6 +103,7 @@ export function useMultiTranslate(text: Accessor<string>) {
       provider: config.provider,
       apiKey: config.apiKey,
       apiEndpoint: config.apiEndpoint,
+      apiMode: config.apiMode,
       model: config.model,
       promptTemplate: config.promptTemplate,
       maxTokens: config.maxTokens,
@@ -185,6 +190,9 @@ export function useMultiTranslate(text: Accessor<string>) {
         {
           apiKey: config.apiKey,
           apiEndpoint: config.apiEndpoint,
+          apiMode: config.apiMode,
+          requiresApiKey: getTranslateProviderMeta(config.provider)
+            ?.requiresApiKey,
           model: config.model,
           promptTemplate: config.promptTemplate,
           maxTokens: config.maxTokens,

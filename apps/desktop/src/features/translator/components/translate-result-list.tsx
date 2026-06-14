@@ -6,9 +6,9 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useI18n } from "@/i18n";
+import { cn } from "@/lib/utils";
 import { getProviderMeta } from "@/services/translate/config";
 import { translateActions, translateConfig } from "@/stores/settings/services";
-import { cn } from "@/utils";
 import { useMultiTranslate } from "../hooks/use-multi-translate";
 
 interface TranslateResultListProps {
@@ -23,6 +23,11 @@ export function TranslateResultList(props: TranslateResultListProps) {
   const expandedValues = createMemo(() =>
     results().flatMap((item) => (item.isCollapsed ? [] : [item.provider]))
   );
+
+  const getProviderDisplayName = (provider: string) =>
+    translateConfig.providers
+      .find((config) => config.provider === provider)
+      ?.displayName?.trim();
 
   const normalizeAccordionValues = (
     value: string[] | string | undefined
@@ -95,6 +100,8 @@ export function TranslateResultList(props: TranslateResultListProps) {
                   name: item.provider,
                   icon: "icon-[tabler--language]",
                 };
+              const providerName = () =>
+                getProviderDisplayName(item.provider) || providerInfo().name;
 
               return (
                 <AccordionItem value={item.provider}>
@@ -106,9 +113,7 @@ export function TranslateResultList(props: TranslateResultListProps) {
                           "text-base text-foreground"
                         )}
                       />
-                      <span class="font-medium text-sm">
-                        {providerInfo().name}
-                      </span>
+                      <span class="font-medium text-sm">{providerName()}</span>
                       <Show when={item.loading}>
                         <span class="animate-pulse text-muted-foreground text-xs">
                           ({t("translator.translating")})
@@ -146,6 +151,7 @@ export function TranslateResultList(props: TranslateResultListProps) {
                         item.resultLines.length === 0
                       }
                     >
+                      <p>{JSON.stringify(item, null, 2)}</p>
                       <p class="text-muted-foreground text-sm">
                         {t("translator.emptyResult")}
                       </p>

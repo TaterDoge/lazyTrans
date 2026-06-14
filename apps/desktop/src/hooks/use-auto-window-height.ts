@@ -6,6 +6,8 @@ import { WINDOW_CONFIG, type WindowLabel } from "../config/window.config";
 
 type UseAutoWindowHeightOptions = {
   getContainer: () => HTMLElement | null;
+  getContentHeight?: () => number | null | undefined;
+  getObservedElements?: () => Array<HTMLElement | null | undefined>;
   maxHeightRatio?: number;
 };
 
@@ -34,16 +36,34 @@ function resolveWindowY(
   return currentY;
 }
 
+function resolveContentHeight(
+  container: HTMLElement,
+  getContentHeight?: () => number | null | undefined
+) {
+  const measuredContentHeight = getContentHeight?.();
+
+  if (
+    typeof measuredContentHeight === "number" &&
+    Number.isFinite(measuredContentHeight)
+  ) {
+    return Math.ceil(measuredContentHeight);
+  }
+
+  return Math.ceil(container.scrollHeight);
+}
+
 export function useAutoWindowHeight({
   getContainer,
+  getContentHeight,
+  getObservedElements,
   maxHeightRatio = 0.5,
 }: UseAutoWindowHeightOptions) {
   const currentWindow = getCurrentWebviewWindow();
   onMount(() => {
     let disposed = false;
     let maxHeight = Number.POSITIVE_INFINITY;
-    const workAreaTop = Number.NEGATIVE_INFINITY;
-    const workAreaBottom = Number.POSITIVE_INFINITY;
+    let workAreaTop = Number.NEGATIVE_INFINITY;
+    let workAreaBottom = Number.POSITIVE_INFINITY;
     let syncing = false;
     let syncPending = false;
 
@@ -61,7 +81,7 @@ export function useAutoWindowHeight({
           return;
         }
 
-        const contentHeight = Math.ceil(container.scrollHeight);
+        const contentHeight = resolveContentHeight(container, getContentHeight);
         const size = await currentWindow.innerSize();
         const position = await currentWindow.outerPosition();
         const targetWidth = resolveWindowWidth(currentWindow.label, size.width);
@@ -114,8 +134,11 @@ export function useAutoWindowHeight({
     });
 
     const container = getContainer();
-    if (container) {
-      observer.observe(container);
+    const observedElements = [container, ...(getObservedElements?.() ?? [])];
+    for (const element of observedElements) {
+      if (element) {
+        observer.observe(element);
+      }
     }
 
     currentMonitor()
@@ -124,6 +147,8 @@ export function useAutoWindowHeight({
           return;
         }
 
+        workAreaTop = monitor.workArea.position.y;
+        workAreaBottom = workAreaTop + monitor.workArea.size.height;
         maxHeight = Math.floor(monitor.workArea.size.height * maxHeightRatio);
         return currentWindow.setSizeConstraints({ maxHeight });
       })

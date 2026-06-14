@@ -1,10 +1,11 @@
 import { Link, Outlet, useLocation } from "@tanstack/solid-router";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { For } from "solid-js";
+import { Toaster } from "@/components/ui/sonner";
 import { useCloseToHideWindow } from "@/hooks/use-close-to-hide-window";
 import { useWindowShortcuts } from "@/hooks/use-window-shortcuts";
-import { cn } from "@/utils";
-import { hideWindow } from "@/utils/window";
+import { cn } from "@/lib/utils";
+import { hideWindow } from "@/lib/utils/window";
 import {
   Sidebar,
   SidebarContent,
@@ -96,6 +97,8 @@ function SettingsLayout() {
           <Outlet />
         </main>
       </SidebarInset>
+
+      <Toaster />
     </SidebarProvider>
   );
 }
