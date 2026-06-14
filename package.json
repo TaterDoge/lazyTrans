@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "@lazytrans/typescript-config": "workspace:*",
-    "turbo": "^2.9.12",
+    "turbo": "^2.9.18",
     "@changesets/cli": "^2.31.0",
     "typescript": "~6.0.3"
   }

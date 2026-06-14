@@ -33,6 +33,10 @@
     "clipboard-manager:allow-write-text",
     "os:default",
     "store:default",
-    "autostart:default"
+    "autostart:default",
+    {
+      "identifier": "http:default",
+      "allow": [{ "url": "https://*:*" }, { "url": "http://*:*" }]
+    }
   ]
 }
