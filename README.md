@@ -1,278 +1,236 @@
 # LazyTrans
 
-<p align="center">
-  <img src="src/assets/logo.svg" alt="LazyTrans Logo" width="120" height="120">
-</p>
+LazyTrans 是一个基于 Tauri v2 和 SolidJS 的桌面翻译应用。当前仓库的重点是桌面端：通过隐藏的后台窗口管理托盘、开机自启和全局快捷键，并提供一个轻量的悬浮翻译窗口与独立设置窗口。
 
-<p align="center">
-  <strong>轻量、快捷的桌面翻译工具</strong>
-</p>
+> 当前项目仍处于开发阶段。翻译主链路可用；TTS、OCR 和截图翻译相关配置已经搭好，但完整执行链路尚未全部接入。
 
-<p align="center">
-  <a href="#功能特性">功能特性</a> •
-  <a href="#技术架构">技术架构</a> •
-  <a href="#快速开始">快速开始</a> •
-  <a href="#开发指南">开发指南</a> •
-  <a href="#项目结构">项目结构</a>
-</p>
+## 当前能力
 
----
+- 悬浮翻译窗口：透明无边框窗口，支持拖动、置顶/取消置顶、隐藏、复制输入内容。
+- 多服务翻译：一次输入可按启用顺序调用多个翻译 Provider，并在折叠面板中展示结果。
+- 翻译 Provider：内置 OpenAI 兼容接口、Ollama、Google、Bing，并支持新增自定义 OpenAI 兼容服务。
+- 设置窗口：包含通用、翻译、服务、快捷键、关于等页面。
+- 服务配置：翻译、TTS、OCR 共用一套 Provider 配置 UI，可配置 API Key、Endpoint、模型、提示词和高级参数。
+- 系统集成：隐藏后台 daemon 窗口负责托盘菜单、开机自启和全局快捷键注册。
+- 持久化：用户设置写入 Tauri Store 的 `settings.json`，前端通过 Solid Store 响应式读取。
 
-## 简介
+## 还未完成
 
-**LazyTrans** 是一款基于 Tauri 构建的桌面翻译应用，专为追求效率和简洁的用户设计。它采用多窗口独立架构，提供悬浮翻译、截图翻译、系统设置等功能，让你在工作流中无缝完成翻译任务。
+- 截图翻译窗口没有在当前 Tauri 配置中注册，截图/OCR 执行流程尚未实现。
+- TTS Provider 目前主要是类型、配置和服务入口，朗读按钮尚未接入真实播放流程。
+- 仓库当前没有已提交的 `.test.ts` / `.spec.ts` 测试文件，`bun test` 脚本已预留。
 
-## 功能特性
+## 技术栈
 
-### 🎯 悬浮翻译窗口
-- **无边框设计**：透明背景，无系统装饰，干净简洁
-- **置顶显示**：始终保持在最上层，不影响其他工作
-- **自由拖动**：支持拖拽移动位置，灵活摆放
-- **快捷操作**：通过系统托盘或快捷键快速唤起/隐藏
+| 分类 | 使用内容 |
+| --- | --- |
+| 桌面框架 | Tauri v2、Rust |
+| 前端框架 | SolidJS、TanStack Solid Router、Vite |
+| 语言 | TypeScript strict、Rust 2021 |
+| 样式 | Tailwind CSS v4、Iconify Tailwind、tw-animate-css、Inter Variable |
+| UI 基础 | Kobalte、Corvu、项目内 `components/ui` 组件 |
+| 状态与持久化 | Solid Store、`@tauri-apps/plugin-store` |
+| 系统能力 | Tauri tray、global-shortcut、autostart、clipboard、http、opener、os、process |
+| 工程化 | Bun workspace、Turbo、Ultracite / Biome |
 
-### ⚙️ 设置窗口
-- **多标签配置**：通用、外观、快捷键、语言、关于五大模块
-- **路由导航**：流畅的单页应用体验
-- **独立进程**：设置窗口独立运行，不影响主功能
+## 项目结构
 
-### 📸 截图翻译（开发中）
-- **全屏遮罩**：覆盖整个屏幕进行区域选择
-- **快捷键支持**：ESC 快速退出截图模式
-- **OCR 集成**：计划集成 OCR 识别文字并自动翻译
-
-### 🖥️ 系统托盘
-- **常驻后台**：启动后驻留系统托盘，随时可用
-- **快捷菜单**：右键菜单快速访问所有功能
-- **轻量启动**：启动器窗口隐藏，通过托盘交互
-
-## 技术架构
-
-### 核心技术栈
-
-| 技术 | 用途 |
-|------|------|
-| **Tauri v2** | 跨平台桌面应用框架，Rust 后端 |
-| **SolidJS** | 响应式前端框架，高性能 UI |
-| **TypeScript** | 类型安全的 JavaScript 超集 |
-| **Tailwind CSS** | 实用优先的 CSS 框架 |
-| **Vite** | 快速的前端构建工具 |
-
-### 架构亮点
-
-#### 1. 多窗口独立架构
-
-LazyTrans 采用独特的多窗口设计，每个功能模块作为独立窗口运行：
-
-```
-┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
-│   translator    │  │    settings     │  │   screenshot    │
-│   悬浮翻译窗口   │  │    设置窗口     │  │   截图翻译窗口   │
-│  (透明/无边框)   │  │   (常规窗口)    │  │  (全屏遮罩)     │
-└─────────────────┘  └─────────────────┘  └─────────────────┘
-         │                    │                    │
-         └────────────────────┼────────────────────┘
-                              │
-                    ┌─────────────────┐
-                    │     daemon      │
-                    │   后台服务窗口   │
-                    │  (隐藏/托盘管理) │
-                    └─────────────────┘
+```text
+lazyTrans/
+├── apps/
+│   └── desktop/
+│       ├── index.html                 # 主前端入口：翻译窗口与设置路由
+│       ├── daemon.html                # 后台 daemon 入口
+│       ├── src/
+│       │   ├── daemon.tsx             # 托盘、开机自启、全局快捷键
+│       │   ├── index.tsx              # Solid Router 与设置初始化
+│       │   ├── routes/                # TanStack Router 文件路由
+│       │   ├── features/
+│       │   │   ├── translator/        # 悬浮翻译窗口
+│       │   │   └── settings/          # 设置窗口页面与布局
+│       │   ├── services/
+│       │   │   ├── translate-core/    # 内嵌翻译/TTS 核心与 Provider Registry
+│       │   │   ├── translate/         # 应用层翻译服务入口
+│       │   │   ├── tts/               # 应用层 TTS 服务入口
+│       │   │   └── service-config/    # Provider 元信息与默认配置
+│       │   ├── stores/settings/       # 设置模块、迁移与持久化
+│       │   ├── config/                # 窗口、快捷键等配置
+│       │   ├── hooks/                 # Tauri 与 UI 相关 hooks
+│       │   ├── i18n/                  # 中英文文案
+│       │   ├── components/ui/         # 通用 UI 组件
+│       │   └── lib/utils/             # 工具函数
+│       └── src-tauri/
+│           ├── tauri.conf.json        # Tauri 窗口、构建、打包配置
+│           ├── capabilities/          # Tauri v2 权限声明
+│           └── src/                   # Rust 入口与插件注册
+├── packages/
+│   └── typescript-config/             # 共享 tsconfig
+├── package.json                       # Bun workspace 与根脚本
+├── turbo.json                         # Turbo 任务图
+├── biome.jsonc                        # Ultracite / Biome 规则
+├── tsconfig.base.json                 # 根 TypeScript 配置
+└── bun.lock                           # Bun 锁文件
 ```
 
-#### 2. Type-Safe 窗口标签系统
+`apps/desktop/src/services/translate-core` 是桌面应用内部源码目录，不是独立 workspace package。当前唯一的 `packages/*` 包是共享 TypeScript 配置。
 
-基于 TypeScript 的类型安全窗口管理：
-
-```typescript
-// 窗口标签类型，编译时检查
-type WindowLabel = "translator" | "settings" | "screenshot";
-
-// 统一窗口配置
-const WINDOW_CONFIG: Record<WindowLabel, WindowConfig> = {
-  translator: { /* 无边框、透明、置顶 */ },
-  settings: { /* 常规窗口 */ },
-  screenshot: { /* 全屏、透明 */ },
-};
-```
-
-#### 3. 动态窗口创建
-
-窗口不在 `tauri.conf.json` 中静态定义，而是通过 JavaScript API 动态创建：
-
-```typescript
-import { showWindow, toggleWindow } from "./utils/window";
-
-// 显示窗口（不存在则自动创建）
-await showWindow("translator");
-
-// 切换窗口显示状态
-await toggleWindow("settings");
-```
-
-#### 4. 权限安全模型
-
-基于 Tauri v2 的 Capabilities 系统，精细化控制权限：
-
-```json
-{
-  "windows": ["daemon", "settings", "screenshot", "translator"],
-  "permissions": [
-    "core:window:allow-show",
-    "core:window:allow-hide",
-    "core:webview:allow-create-webview-window"
-  ]
-}
-```
-
-## 快速开始
+## 运行方式
 
 ### 环境要求
 
-- [Node.js](https://nodejs.org/) (v18+)
-- [Bun](https://bun.sh/) (推荐) 或 npm/yarn/pnpm
-- [Rust](https://www.rust-lang.org/) (最新稳定版)
+- Bun：仓库声明 `packageManager` 为 `bun@1.3.13`
+- Rust：稳定版工具链
+- Tauri 平台依赖：按目标系统安装 Tauri v2 所需依赖
 
-### 安装步骤
-
-1. **克隆仓库**
+### 安装依赖
 
 ```bash
-git clone https://github.com/lazyTrans/lazyTrans.git
-cd lazyTrans
-```
-
-2. **安装依赖**
-
-```bash
-# 前端依赖
 bun install
-
-# Rust 依赖（首次运行会自动安装）
 ```
 
-3. **启动开发服务器**
+### 启动桌面应用
 
 ```bash
-bun run tauri dev
+bun run dev:desktop
 ```
 
-应用将自动启动，系统托盘会出现 LazyTrans 图标。
+这个命令会在 `apps/desktop` 中执行 `tauri dev`。Tauri 会按 `tauri.conf.json` 启动 Vite 开发服务器，并拉起桌面应用。
 
-## 开发指南
-
-### 常用命令
+### 仅启动前端开发任务
 
 ```bash
-# 启动开发服务器
 bun run dev
-bun run tauri dev
-
-# 构建生产版本
-bun run build
-bun run tauri build
-
-# 类型检查
-bun run check
-
-# 代码格式化
-bun run fix
 ```
 
-### 项目结构
+根目录的 `dev` 是 Turbo 任务，会运行 workspace 的 `dev` 脚本；对当前桌面应用来说它只启动 Vite，不会打开 Tauri 桌面壳。
 
-```
-lazyTrans/
-├── src/                          # 前端源代码
-│   ├── config/
-│   │   └── window.config.ts      # 窗口配置定义
-│   ├── utils/
-│   │   └── window.ts             # 窗口管理工具函数
-│   ├── windows/                  # 各窗口独立入口
-│   │   ├── translator/           # 翻译窗口
-│   │   │   └── index.tsx
-│   │   ├── settings/             # 设置窗口
-│   │   │   ├── index.tsx         # 设置应用根组件
-│   │   │   ├── layout.tsx        # 设置页面布局
-│   │   │   ├── routes.ts         # 路由配置
-│   │   │   └── pages/            # 设置子页面
-│   │   │       ├── general.tsx   # 通用设置
-│   │   │       ├── appearance.tsx # 外观设置
-│   │   │       ├── shortcuts.tsx # 快捷键设置
-│   │   │       ├── language.tsx  # 语言设置
-│   │   │       └── about.tsx     # 关于页面
-│   │   └── screenshot/           # 截图窗口
-│   │       └── index.tsx
-│   ├── tray.ts                   # 系统托盘管理
-│   ├── index.tsx                 # 应用入口（窗口路由）
-│   └── index.css                 # 全局样式
-├── src-tauri/                    # Tauri/Rust 后端
-│   ├── src/
-│   │   ├── lib.rs                # Tauri 命令定义
-│   │   └── main.rs               # 应用入口
-│   ├── capabilities/
-│   │   └── default.json          # 权限配置
-│   └── tauri.conf.json           # Tauri 配置
-├── package.json                  # 前端依赖
-└── vite.config.ts                # Vite 配置
-```
+## 常用命令
 
-### 添加新窗口
+| 命令 | 说明 |
+| --- | --- |
+| `bun run dev:desktop` | 启动 Tauri 桌面开发环境 |
+| `bun run dev` | 运行 Turbo dev 任务；当前主要是 Vite 前端 dev |
+| `bun run build` | 运行所有 workspace 的 build 任务 |
+| `bun run build:desktop` | 只运行桌面 workspace 的 Vite build |
+| `bun run --cwd apps/desktop tauri:build` | 构建 Tauri 桌面安装包/应用包 |
+| `bun run typecheck` / `bun run check` | TypeScript 类型检查 |
+| `bun run lint` | Ultracite / Biome 检查 |
+| `bun run fix` | Ultracite / Biome 自动修复 |
+| `bun run check-fix` | 先类型检查，再自动修复格式和 lint 问题 |
+| `bun run test` | 运行 workspace 测试任务 |
+| `bun run clean` | 运行 Turbo clean 任务 |
 
-1. 在 `src/config/window.config.ts` 添加窗口配置
-2. 在 `src/windows/` 创建窗口组件目录
-3. 在 `src/index.tsx` 注册窗口组件
-4. 更新 `src-tauri/capabilities/default.json` 添加窗口权限
-
-## 构建和发布
-
-### 开发构建
+桌面应用内也可以直接执行：
 
 ```bash
-bun run tauri dev
+bun run --cwd apps/desktop typecheck
+bun run --cwd apps/desktop test
+bun run --cwd apps/desktop tauri:dev
+bun run --cwd apps/desktop tauri:build
 ```
 
-### 生产构建
+## 架构概览
+
+### 入口与窗口
+
+当前 Tauri 配置静态声明 3 个窗口：
+
+| 窗口 | URL | 作用 |
+| --- | --- | --- |
+| `daemon` | `daemon.html` | 隐藏后台窗口，初始化设置、托盘、开机自启、全局快捷键 |
+| `translator` | `index.html/#/` | 悬浮翻译窗口 |
+| `settings` | `index.html/#/settings` | 设置窗口 |
+
+前端的 `src/config/window.config.ts` 维护同名窗口配置，供 hooks 和窗口工具函数读取。新增窗口时需要同时更新：
+
+- `apps/desktop/src-tauri/tauri.conf.json`
+- `apps/desktop/src-tauri/capabilities/default.json`
+- `apps/desktop/src/config/window.config.ts`
+- 对应路由、入口或功能模块
+
+当前 `src/lib/utils/window.ts` 主要负责 `show`、`hide`、`focus`、`alwaysOnTop` 等操作，不负责动态创建新窗口。
+
+### 前端路由
+
+`index.html` 加载 `src/index.tsx`，使用 TanStack Solid Router 的 hash history：
+
+- `/`：翻译窗口页面 `features/translator`
+- `/settings`：设置窗口布局 `features/settings/layout`
+- `/settings/translate`：翻译语言设置
+- `/settings/service`：翻译、TTS、OCR Provider 配置
+- `/settings/shortcuts`：全局与应用内快捷键
+- `/settings/about`：关于页
+
+### Daemon 流程
+
+`daemon.html` 加载 `src/daemon.tsx`。它不渲染 UI，只在 `onMount` 后初始化设置，并挂载三个系统能力：
+
+- `useTray()`：创建托盘菜单，提供翻译、设置、重启、退出入口。
+- `useAutoStart()`：同步开机自启设置。
+- `useAppShortcuts()`：注册全局快捷键，默认打开翻译窗口。
+
+### 翻译流程
+
+```text
+Translator UI
+  -> useMultiTranslate(text)
+  -> stores/settings/services/translate.store.ts
+  -> services/translate/index.ts
+  -> services/translate-core/core/service-runner.ts
+  -> services/translate-core/translate/providers/*
+  -> @tauri-apps/plugin-http 或 OpenAI 兼容接口
+```
+
+关键点：
+
+- 翻译窗口中按 Enter 触发翻译，Shift + Enter 保留换行。
+- `useMultiTranslate` 会读取已启用 Provider，并按 `providerOrder` 排序。
+- 折叠的 Provider 会延迟执行，展开时再触发对应翻译请求。
+- 自定义 OpenAI 兼容服务在应用层以 `custom:*` 表示，运行时会映射到核心 `openai` Provider。
+- Google 和 Bing Provider 使用 Tauri HTTP 插件请求外部接口；OpenAI/Ollama 使用 OpenAI 兼容协议。
+
+### 设置与持久化
+
+设置模块位于 `apps/desktop/src/stores/settings`：
+
+- `general.store.ts`：开机自启、语言、主题。
+- `shortcuts.store.ts`：快捷键映射与旧配置迁移。
+- `services/translate.store.ts`：翻译 Provider、启用状态、顺序、语言配置。
+- `services/tts.store.ts`：TTS Provider 配置。
+- `services/ocr.store.ts`：OCR Provider 配置。
+
+所有模块通过 `createSettingsModule` 接入 `@tauri-apps/plugin-store`，并保存在 `settings.json` 中。
+
+### 服务与 Provider
+
+核心服务在 `apps/desktop/src/services/translate-core`：
+
+- `core/registry.ts`：按服务类型注册 Provider。
+- `core/service-runner.ts`：校验配置并执行 Provider。
+- `translate/providers/*`：内置翻译 Provider 实现。
+- `tts/*`：TTS 类型与服务入口。
+
+应用层 Provider 元信息在 `apps/desktop/src/services/service-config`，用于设置页展示和默认配置生成。
+
+## 开发约定
+
+- 使用 Bun；以 `bun.lock` 为准，不要新增 npm/yarn/pnpm 锁文件。
+- TypeScript 使用 strict 配置，避免用 `any` 或注释绕过类型系统。
+- 前端路径别名为 `@/*`，指向 `apps/desktop/src/*`。
+- SolidJS 状态优先使用 `createSignal`、`createMemo`、`createStore` 和 store actions。
+- 修改窗口、权限、Provider、设置结构时，同步更新相关配置和迁移逻辑。
+- 提交前建议至少运行 `bun run check`；涉及格式或 lint 时运行 `bun run check-fix`。
+
+## 提交检查
+
+仓库包含 Husky pre-commit hook。提交时会筛选已暂存的代码和文档文件，并执行：
 
 ```bash
-# 构建所有平台的安装包
-bun run tauri build
-
-# 构建结果位于：
-# src-tauri/target/release/bundle/
+bun check-fix <staged-files>
 ```
 
-### 支持平台
-
-- macOS (Intel & Apple Silicon)
-- Windows
-- Linux (开发中)
-
-## 贡献指南
-
-欢迎提交 Issue 和 Pull Request！
-
-1. Fork 本仓库
-2. 创建你的特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 打开一个 Pull Request
-
-### 代码规范
-
-- 使用 Biome 进行代码格式化和检查
-- 提交前运行 `bun run check-fix`
-- 遵循 Husky pre-commit 钩子
+如果同一个已暂存文件还有未暂存修改，hook 会中止提交，避免自动修复导致索引和工作区不一致。
 
 ## 许可证
 
-[MIT](LICENSE)
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=lazyTrans/lazyTrans&type=Date)](https://star-history.com/#lazyTrans/lazyTrans&Date)
-
----
-
-<p align="center">
-  用 ❤️ 和 ☕ 构建
-</p>
+`apps/desktop/package.json` 标注为 MIT。当前仓库根目录没有独立 `LICENSE` 文件，如需正式发布建议补充。

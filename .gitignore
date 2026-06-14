@@ -27,3 +27,6 @@ target
 
 # Turborepo
 .turbo
+
+# npm lockfile (Bun is the package manager; bun.lock is authoritative)
+package-lock.json
