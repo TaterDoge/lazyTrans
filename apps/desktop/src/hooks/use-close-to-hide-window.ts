@@ -1,6 +1,6 @@
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { onCleanup, onMount } from "solid-js";
-import { hideWindow } from "../utils/window";
+import { hideWindow } from "@/lib/utils/window";
 
 export function useCloseToHideWindow() {
   onMount(() => {

@@ -3,7 +3,7 @@ import {
   getCurrentWebviewWindow,
   WebviewWindow,
 } from "@tauri-apps/api/webviewWindow";
-import type { WindowLabel } from "../config/window.config";
+import type { WindowLabel } from "@/config/window.config";
 
 async function getWindow(label?: WindowLabel) {
   if (!label) {

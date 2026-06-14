@@ -37,7 +37,7 @@ export function getProviderDefaults(provider: TranslateProvider): {
   const meta = getProviderMeta(provider);
   return {
     apiEndpoint: meta?.defaultEndpoint || "",
-    model: meta?.supportedModels?.[0] || "",
+    model: "",
   };
 }
 

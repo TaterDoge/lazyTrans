@@ -2,7 +2,7 @@ import * as SwitchPrimitive from "@kobalte/core/switch";
 import type { Component, ValidComponent } from "solid-js";
 import { splitProps } from "solid-js";
 
-import { cn } from "@/utils";
+import { cn } from "@/lib/utils";
 
 type SwitchProps<T extends ValidComponent = "div"> =
   SwitchPrimitive.SwitchRootProps<T> & {

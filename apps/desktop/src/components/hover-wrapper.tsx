@@ -1,5 +1,5 @@
 import { type JSX, splitProps } from "solid-js";
-import { cn } from "../utils";
+import { cn } from "@/lib/utils";
 
 export default function HoverWrapper(
   props: { children: JSX.Element } & JSX.HTMLAttributes<HTMLDivElement>

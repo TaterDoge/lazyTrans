@@ -3,7 +3,7 @@ import { Menu, MenuItem } from "@tauri-apps/api/menu";
 import { TrayIcon } from "@tauri-apps/api/tray";
 import { exit, relaunch } from "@tauri-apps/plugin-process";
 import { onMount } from "solid-js";
-import { hideAllWindows, showWindow } from "../utils/window";
+import { hideAllWindows, showWindow } from "@/lib/utils/window";
 
 const TRAY_ID = "LAZYTRANS_TRAY";
 

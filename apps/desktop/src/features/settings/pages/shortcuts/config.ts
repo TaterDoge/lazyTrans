@@ -11,7 +11,7 @@ export type {
   SettingItem,
 } from "../../components/types";
 
-import { isMac } from "../../../../utils/platform";
+import { isMac } from "@/lib/utils/platform";
 
 // ─── 修饰键集合 ──────────────────────────────────────────────────────────────
 

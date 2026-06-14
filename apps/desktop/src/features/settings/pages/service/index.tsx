@@ -5,7 +5,7 @@
 import { For, type VoidComponent } from "solid-js";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useI18n } from "@/i18n";
-import { cn } from "@/utils";
+import { cn } from "@/lib/utils";
 import { SERVICE_TABS } from "./config";
 import { OCRSettings } from "./ocr";
 import { TranslateSettings } from "./translate";

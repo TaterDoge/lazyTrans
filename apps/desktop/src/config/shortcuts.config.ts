@@ -1,5 +1,5 @@
+import { isMac } from "@/lib/utils/platform";
 import type { Dictionary } from "../i18n";
-import { isMac } from "../utils/platform";
 import type { WindowLabel } from "./window.config";
 
 export type ShortcutMeta = {

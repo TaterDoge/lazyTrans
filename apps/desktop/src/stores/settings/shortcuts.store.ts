@@ -1,5 +1,5 @@
+import { isMac } from "@/lib/utils/platform";
 import { getDefaultKeyMap } from "../../config/shortcuts.config";
-import { isMac } from "../../utils/platform";
 import { createSettingsModule } from "./base";
 
 export type ShortcutKeyMap = Record<string, string>;

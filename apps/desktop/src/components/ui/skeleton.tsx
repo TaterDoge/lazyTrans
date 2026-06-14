@@ -3,7 +3,7 @@ import * as SkeletonPrimitive from "@kobalte/core/skeleton";
 import type { ValidComponent } from "solid-js";
 import { splitProps } from "solid-js";
 
-import { cn } from "@/utils";
+import { cn } from "@/lib/utils";
 
 type SkeletonRootProps<T extends ValidComponent = "div"> =
   SkeletonPrimitive.SkeletonRootProps<T> & { class?: string | undefined };

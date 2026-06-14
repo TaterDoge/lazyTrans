@@ -6,13 +6,13 @@
  */
 
 import { createSignal, onCleanup, onMount, Show } from "solid-js";
+import { cn } from "@/lib/utils";
 import { SHORTCUT_METAS } from "../../../../config/shortcuts.config";
 import { useI18n } from "../../../../i18n";
 import {
   shortcutKeys,
   shortcutsActions,
 } from "../../../../stores/settings/shortcuts.store";
-import { cn } from "../../../../utils";
 import type { SettingGroup } from "../../components/types";
 import {
   buildModifierParts,
