@@ -7,6 +7,7 @@ import {
   executeService,
   executeServiceStream,
   registerServiceProvider,
+  serviceRegistry,
 } from "../core";
 import { registerBuiltinTranslateProviders } from "./providers";
 import type {
@@ -18,6 +19,7 @@ import type {
 export {
   BingTranslateProvider,
   GoogleTranslateProvider,
+  OllamaTranslateProvider,
   OpenAITranslateProvider,
 } from "./providers";
 export * from "./types";
@@ -67,4 +69,24 @@ export function translateStream(
     TranslateOptions,
     TranslateResult
   >("translate", config, options, onChunk);
+}
+
+export function listTranslateModels(
+  config: TranslateConfig
+): Promise<string[]> {
+  ensureBuiltinTranslateProvidersRegistered();
+
+  const provider = serviceRegistry.get<
+    IProvider<TranslateConfig, TranslateOptions, TranslateResult> & {
+      listModels?: (config: TranslateConfig) => Promise<string[]>;
+    }
+  >("translate", config.provider);
+
+  if (!provider?.listModels) {
+    throw new Error(
+      `Provider ${config.provider} does not support model listing`
+    );
+  }
+
+  return provider.listModels(config);
 }

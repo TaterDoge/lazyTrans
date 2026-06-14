@@ -11,6 +11,7 @@ import type {
 } from "@/services/translate/types";
 import { createSettingsModule } from "../base";
 import {
+  fillMissingProviders as fillMissingServiceProviders,
   isKnownProvider as isKnownServiceProvider,
   normalizeProviderOrder as normalizeServiceProviderOrder,
 } from "./provider-list.store";
@@ -20,15 +21,12 @@ const BUILTIN_PROVIDERS = Object.keys(
   TRANSLATE_PROVIDERS
 ) as BuiltinTranslateProvider[];
 
-const defaultEnabledProviders = BUILTIN_PROVIDERS.filter(
-  (provider) => !TRANSLATE_PROVIDERS[provider]?.requiresApiKey
-);
-
 const defaultTranslateConfig: TranslateConfig = {
   activeProvider: "openai",
-  providers: defaultEnabledProviders.map((provider) =>
-    getDefaultProviderConfig(provider)
-  ),
+  providers: BUILTIN_PROVIDERS.map((provider) => ({
+    ...getDefaultProviderConfig(provider),
+    enabled: !TRANSLATE_PROVIDERS[provider]?.requiresApiKey,
+  })),
   providerOrder: [...BUILTIN_PROVIDERS],
   sourceLang: "auto",
   targetLang: "zh-CN",
@@ -38,6 +36,7 @@ const defaultTranslateConfig: TranslateConfig = {
 interface LegacyTranslateConfig {
   apiEndpoint?: string;
   apiKey?: string;
+  apiMode?: ProviderConfig["apiMode"];
   enabledProviders?: TranslateProvider[];
   maxTokens?: number;
   model?: string;
@@ -81,12 +80,12 @@ function normalizeProviders(
       continue;
     }
 
-    if (provider.enabled === false) {
-      continue;
-    }
-
-    const { enabled: _enabled, isCollapsed, ...providerConfig } = provider;
-    normalized.push({ ...providerConfig, isCollapsed: isCollapsed ?? false });
+    normalized.push({
+      ...translateServiceDefinition.getDefaultProviderConfig(provider.provider),
+      ...provider,
+      isCollapsed: provider.isCollapsed ?? false,
+      enabled: provider.enabled ?? true,
+    });
     seen.add(provider.provider);
   }
 
@@ -108,20 +107,25 @@ function migrateConfig(
       ? saved.activeProvider
       : defaults.activeProvider;
     const providers = normalizeProviders(saved.providers);
+    const allProviders = fillMissingServiceProviders(
+      providers,
+      saved.providerOrder ?? [],
+      translateServiceDefinition
+    );
 
     return {
       activeProvider,
-      providers,
+      providers: allProviders,
       providerOrder: normalizeProviderOrder([
         ...(saved.providerOrder ?? []),
-        ...providers.map((provider) => provider.provider),
+        ...allProviders.map((provider) => provider.provider),
       ]),
       sourceLang: saved.sourceLang ?? defaults.sourceLang,
       targetLang: saved.targetLang ?? defaults.targetLang,
     };
   }
 
-  // 旧配置迁移
+  // 旧配置迁移：所有内置 provider 都写入 providers 数组，启用/禁用按旧配置决定
   const legacy = saved as LegacyTranslateConfig | null;
 
   // 从旧配置中提取全局设置
@@ -135,22 +139,25 @@ function migrateConfig(
     ...BUILTIN_PROVIDERS,
   ]);
 
-  // 构建 providers 数组
-  const providers = enabledProviders.map((providerId) => {
+  // 构建 providers 数组：所有内置 provider，enabled 根据旧配置判断
+  const providers = BUILTIN_PROVIDERS.map((providerId) => {
+    const isEnabled = enabledProviders.includes(providerId);
     const defaultConfig = getDefaultProviderConfig(providerId);
-    // 如果是当前使用的 provider，使用旧配置中的值
-    if (providerId === legacyProvider && legacy) {
+    // 如果是当前启用的 provider 且是旧配置选中的，使用旧配置中的值
+    if (isEnabled && providerId === legacyProvider && legacy) {
       return {
         ...defaultConfig,
+        enabled: true as const,
         apiKey: legacy.apiKey ?? "",
         apiEndpoint: legacy.apiEndpoint ?? defaultConfig.apiEndpoint,
+        apiMode: legacy.apiMode ?? defaultConfig.apiMode,
         model: legacy.model ?? defaultConfig.model,
         promptTemplate: legacy.promptTemplate ?? "",
         temperature: legacy.temperature ?? 0.3,
         maxTokens: legacy.maxTokens ?? 1024,
       };
     }
-    return defaultConfig;
+    return { ...defaultConfig, enabled: isEnabled };
   });
 
   return {

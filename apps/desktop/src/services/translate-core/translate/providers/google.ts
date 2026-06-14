@@ -3,6 +3,7 @@
  * 基于 Google Translate 非官方 API 实现
  */
 
+import { fetch } from "@tauri-apps/plugin-http";
 import type { IProvider, ServiceCapability } from "../../core";
 import type {
   TranslateConfig,

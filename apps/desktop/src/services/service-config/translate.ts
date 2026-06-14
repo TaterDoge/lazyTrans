@@ -6,6 +6,16 @@ import type {
 import { isCustomTranslateProvider } from "../translate/types";
 import { createDefaultProviderConfig, type ServiceDefinition } from "./types";
 
+function createCustomTranslateProviderId(): TranslateProvider {
+  if (typeof globalThis.crypto?.randomUUID === "function") {
+    return `custom:${globalThis.crypto.randomUUID()}`;
+  }
+
+  return `custom:${Date.now().toString(36)}-${Math.random()
+    .toString(36)
+    .slice(2, 8)}`;
+}
+
 export const TRANSLATE_PROVIDERS: Partial<
   Record<BuiltinTranslateProvider, ProviderMeta>
 > = {
@@ -13,19 +23,25 @@ export const TRANSLATE_PROVIDERS: Partial<
     id: "openai",
     name: "OpenAI",
     icon: "icon-[simple-icons--openai]",
-    description: "OpenAI GPT 系列模型",
+    description: "OpenAI 与兼容 OpenAI 协议的云端模型",
     requiresApiKey: true,
     defaultEndpoint: "https://api.openai.com/v1",
-    supportedModels: ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"],
+    defaultApiMode: "chat-completions",
+    providerKind: "llm",
+    supportedApiModes: ["chat-completions", "responses"],
+    supportsModelConfig: true,
   },
   ollama: {
     id: "ollama",
     name: "Ollama",
     icon: "icon-[simple-icons--ollama]",
-    description: "本地 Ollama 模型",
+    description: "本地 Ollama 模型（OpenAI 协议）",
     requiresApiKey: false,
     defaultEndpoint: "http://localhost:11434",
-    supportedModels: ["llama3", "qwen2", "mistral"],
+    defaultApiMode: "chat-completions",
+    providerKind: "llm",
+    supportedApiModes: ["chat-completions"],
+    supportsModelConfig: true,
   },
   google: {
     id: "google",
@@ -34,6 +50,9 @@ export const TRANSLATE_PROVIDERS: Partial<
     description: "Google 翻译 (免费)",
     requiresApiKey: false,
     defaultEndpoint: "https://translate.googleapis.com",
+    providerKind: "http-translate",
+    supportsAdvancedConfig: false,
+    supportsModelConfig: false,
   },
   bing: {
     id: "bing",
@@ -42,15 +61,22 @@ export const TRANSLATE_PROVIDERS: Partial<
     description: "Bing 翻译 (免费)",
     requiresApiKey: false,
     defaultEndpoint: "https://api-edge.cognitive.microsofttranslator.com",
+    providerKind: "http-translate",
+    supportsAdvancedConfig: false,
+    supportsModelConfig: false,
   },
 };
 
 const CUSTOM_OPENAI_PROVIDER_META: ProviderMeta = {
-  id: "custom",
-  name: "自定义",
+  id: "openai",
+  name: "自定义 OpenAI",
   icon: "icon-[tabler--api]",
-  description: "自定义 OpenAI 兼容 API",
-  requiresApiKey: true,
+  description: "自定义 OpenAI 协议 API",
+  requiresApiKey: false,
+  defaultApiMode: "chat-completions",
+  providerKind: "llm",
+  supportedApiModes: ["chat-completions", "responses"],
+  supportsModelConfig: true,
 };
 
 export function getTranslateProviderMeta(
@@ -68,6 +94,7 @@ export const translateServiceDefinition: ServiceDefinition<TranslateProvider> =
     service: "translate",
     defaultProvider: "openai",
     providers: TRANSLATE_PROVIDERS,
+    createCustomProviderId: createCustomTranslateProviderId,
     customProviderMeta: CUSTOM_OPENAI_PROVIDER_META,
     isCustomProvider: isCustomTranslateProvider,
     getProviderMeta: getTranslateProviderMeta,

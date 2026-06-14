@@ -1,6 +1,7 @@
 import { DragDropProvider } from "@dnd-kit/solid";
 import { isSortable } from "@dnd-kit/solid/sortable";
 import { createMemo, createSignal, For, type JSX, Show } from "solid-js";
+import { useI18n } from "@/i18n";
 import type {
   ProviderConfig,
   ServiceConfig,
@@ -17,24 +18,40 @@ interface ProviderSidebarProps<TProvider extends string> {
   actions: {
     update: (partial: Partial<ServiceConfig<TProvider>>) => unknown;
   };
+  canAddCustomProvider?: boolean;
   config: ServiceConfig<TProvider>;
   emptyContent?: JSX.Element;
   getDefaultProviderConfig: (
     providerId: TProvider
   ) => ProviderConfig<TProvider>;
   getProviderMeta: (providerId: TProvider) => ProviderMeta | undefined;
+  onAddCustomProvider?: () => void;
   onSearchChange?: (value: string) => void;
-  searchPlaceholder: string;
   serviceTabs?: JSX.Element;
 }
 
 export const ProviderSidebar = <TProvider extends string>(
   props: ProviderSidebarProps<TProvider>
 ) => {
+  const { t } = useI18n();
   const [providerSearch, setProviderSearch] = createSignal("");
 
+  const addCustomProviderLabel = () => t("settings.service.addCustomProvider");
+  const searchPlaceholder = () =>
+    t("settings.service.providerSearchPlaceholder");
+
+  const getProviderConfig = (providerId: TProvider) =>
+    props.config.providers.find((provider) => provider.provider === providerId);
+
+  const getProviderDisplayName = (providerId: TProvider) =>
+    getProviderConfig(providerId)?.displayName;
+
   const providerSearchItems = createMemo(() =>
-    createProviderSearchItems(props.config.providerOrder, props.getProviderMeta)
+    createProviderSearchItems(
+      props.config.providerOrder,
+      props.getProviderMeta,
+      getProviderDisplayName
+    )
   );
 
   const filteredProviderOrder = createMemo(() =>
@@ -50,36 +67,56 @@ export const ProviderSidebar = <TProvider extends string>(
     props.config.providerOrder.indexOf(providerId);
 
   const isEnabled = (providerId: TProvider) =>
-    props.config.providers.some((provider) => provider.provider === providerId);
+    props.config.providers.some(
+      (provider) =>
+        provider.provider === providerId && provider.enabled !== false
+    );
 
   const handleProviderClick = (providerId: TProvider) => {
     props.actions.update({ activeProvider: providerId });
   };
 
   const handleToggleEnabled = (providerId: TProvider) => {
-    if (!isEnabled(providerId)) {
+    const existing = props.config.providers.find(
+      (provider) => provider.provider === providerId
+    );
+
+    if (existing) {
+      // Toggle the enabled field
+      const providers = props.config.providers.map((provider) =>
+        provider.provider === providerId
+          ? { ...provider, enabled: !isEnabled(providerId) }
+          : provider
+      );
+      const nextConfig: Partial<ServiceConfig<TProvider>> = { providers };
+
+      // If disabling the active provider, switch to the first enabled one
+      if (isEnabled(providerId) && props.config.activeProvider === providerId) {
+        const nextActive = providers.find(
+          (p) => p.enabled !== false && p.provider !== providerId
+        );
+        if (nextActive) {
+          nextConfig.activeProvider = nextActive.provider;
+        }
+      }
+
+      // If enabling a provider, make it the active one
+      if (!isEnabled(providerId)) {
+        nextConfig.activeProvider = providerId;
+      }
+
+      props.actions.update(nextConfig);
+    } else {
+      // Provider not in config yet — add it with enabled: true
       const providers = [
         ...props.config.providers,
-        props.getDefaultProviderConfig(providerId),
+        { ...props.getDefaultProviderConfig(providerId), enabled: true },
       ];
       props.actions.update({
         activeProvider: providerId,
         providers,
       });
-      return;
     }
-
-    const providers = props.config.providers.filter(
-      (provider) => provider.provider !== providerId
-    );
-    const nextConfig: Partial<ServiceConfig<TProvider>> = { providers };
-    const nextProvider = providers[0]?.provider;
-
-    if (props.config.activeProvider === providerId && nextProvider) {
-      nextConfig.activeProvider = nextProvider;
-    }
-
-    props.actions.update(nextConfig);
   };
 
   const handleProviderDragEnd = (fromIndex: number, toIndex: number) => {
@@ -111,42 +148,61 @@ export const ProviderSidebar = <TProvider extends string>(
       {props.serviceTabs}
       <ProviderSearchBox
         onSearchChange={handleSearchChange}
-        placeholder={props.searchPlaceholder}
+        placeholder={searchPlaceholder()}
         value={providerSearch()}
       />
-      <div class="min-h-0 flex-1 space-y-1 overflow-y-auto">
-        <Show
-          fallback={props.emptyContent}
-          when={filteredProviderOrder().length > 0}
+      <div class="relative min-h-0 flex-1">
+        <div
+          class="h-full space-y-1 overflow-y-auto pt-1"
+          classList={{ "pb-16": props.canAddCustomProvider }}
         >
-          <DragDropProvider
-            onDragEnd={(event) => {
-              if (event.canceled) {
-                return;
-              }
-
-              const { source } = event.operation;
-              if (!isSortable(source)) {
-                return;
-              }
-
-              handleProviderDragEnd(source.initialIndex, source.index);
-            }}
+          <Show
+            fallback={props.emptyContent}
+            when={filteredProviderOrder().length > 0}
           >
-            <For each={filteredProviderOrder()}>
-              {(providerId) => (
-                <SortableProviderItem
-                  getProviderMeta={props.getProviderMeta}
-                  index={getProviderIndex(providerId)}
-                  isEnabled={isEnabled(providerId)}
-                  isSelected={props.config.activeProvider === providerId}
-                  onProviderClick={handleProviderClick}
-                  onToggleEnabled={handleToggleEnabled}
-                  providerId={providerId}
-                />
-              )}
-            </For>
-          </DragDropProvider>
+            <DragDropProvider
+              onDragEnd={(event) => {
+                if (event.canceled) {
+                  return;
+                }
+
+                const { source } = event.operation;
+                if (!isSortable(source)) {
+                  return;
+                }
+
+                handleProviderDragEnd(source.initialIndex, source.index);
+              }}
+            >
+              <For each={filteredProviderOrder()}>
+                {(providerId) => (
+                  <SortableProviderItem
+                    displayName={getProviderDisplayName(providerId)}
+                    getProviderMeta={props.getProviderMeta}
+                    index={getProviderIndex(providerId)}
+                    isEnabled={isEnabled(providerId)}
+                    isSelected={props.config.activeProvider === providerId}
+                    onProviderClick={handleProviderClick}
+                    onToggleEnabled={handleToggleEnabled}
+                    providerId={providerId}
+                  />
+                )}
+              </For>
+            </DragDropProvider>
+          </Show>
+        </div>
+        <Show when={props.canAddCustomProvider}>
+          <div class="absolute inset-x-0 bottom-0 z-10 bg-background">
+            <button
+              aria-label={addCustomProviderLabel()}
+              class="flex h-10 w-full cursor-pointer items-center justify-center rounded-lg bg-muted/70 text-foreground transition-colors hover:bg-muted active:scale-[0.98]"
+              onClick={props.onAddCustomProvider}
+              title={addCustomProviderLabel()}
+              type="button"
+            >
+              <span class="icon-[tabler--plus] size-6" />
+            </button>
+          </div>
         </Show>
       </div>
     </div>

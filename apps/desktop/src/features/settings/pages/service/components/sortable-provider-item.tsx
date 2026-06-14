@@ -1,10 +1,11 @@
 import { useSortable } from "@dnd-kit/solid/sortable";
 import { Show } from "solid-js";
 import { Switch } from "@/components/ui/switch";
+import { cn } from "@/lib/utils";
 import type { ProviderMeta } from "@/services/translate-core";
-import { cn } from "@/utils";
 
 interface SortableProviderItemProps<TProvider extends string> {
+  displayName?: string;
   getProviderMeta: (providerId: TProvider) => ProviderMeta | undefined;
   index: number;
   isEnabled: boolean;
@@ -28,40 +29,39 @@ export const SortableProviderItem = <TProvider extends string>(
   });
 
   return (
-    <div
+    <button
       class={cn(
-        "flex w-full items-center justify-between gap-1.5 rounded-md p-2 text-left transition-colors",
+        "flex w-full cursor-pointer items-center justify-between gap-1.5 rounded-md p-2 text-left transition-colors",
         props.isSelected && "bg-accent text-accent-foreground",
         !props.isSelected && "hover:bg-muted",
         isDragging() && "opacity-70"
       )}
+      onClick={() => {
+        props.onProviderClick(props.providerId);
+      }}
       ref={ref}
+      type="button"
     >
-      <button
-        aria-label="Reorder provider"
+      <span
+        aria-hidden="true"
         class="inline-flex size-6 shrink-0 cursor-grab items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted active:cursor-grabbing"
+        data-drag-handle
         ref={handleRef}
-        title="Reorder provider"
-        type="button"
       >
         <span class="icon-[tabler--grip-vertical]" />
-      </button>
-      <button
-        class="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 text-left"
-        onClick={() => props.onProviderClick(props.providerId)}
-        type="button"
-      >
+      </span>
+      <span class="flex min-w-0 flex-1 items-center gap-2.5">
         <Show when={meta()?.icon}>
           <span class={meta()?.icon} />
         </Show>
-        <span class="font-medium text-sm">{meta()?.name}</span>
-      </button>
-      <div class="pointer-events-auto">
-        <Switch
-          checked={props.isEnabled}
-          onChange={() => props.onToggleEnabled(props.providerId)}
-        />
-      </div>
-    </div>
+        <span class="truncate font-medium text-sm">
+          {props.displayName?.trim() || meta()?.name}
+        </span>
+      </span>
+      <Switch
+        checked={props.isEnabled}
+        onChange={() => props.onToggleEnabled(props.providerId)}
+      />
+    </button>
   );
 };

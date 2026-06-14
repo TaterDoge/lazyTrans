@@ -1,13 +1,30 @@
-/**
- * OpenAI 翻译 Provider
- */
-
+import { chat, type StreamChunk, streamToText } from "@tanstack/ai";
+import { openaiCompatibleText } from "@tanstack/ai-openai/compatible";
+import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import type { IProvider, ServiceCapability } from "../../core";
 import type {
+  OpenAIApiMode,
   TranslateConfig,
   TranslateOptions,
   TranslateResult,
 } from "../types";
+
+interface OpenAITranslateProviderOptions {
+  defaultEndpoint?: string;
+  errorLabel: string;
+  name: string;
+  requiresApiKey?: boolean;
+}
+
+interface ModelListResponse {
+  data?: Array<{ id?: string }>;
+}
+
+const BROWSER_API_KEY_PLACEHOLDER = "not-needed";
+const DEFAULT_API_MODE: OpenAIApiMode = "chat-completions";
+const TEXT_CONTENT_EVENT = "TEXT_MESSAGE_CONTENT";
+const TRAILING_SLASHES_RE = /\/+$/;
+const OPENAI_PATH_SUFFIX_RE = /\/(chat\/completions|responses|models)\/?$/i;
 
 function buildSystemPrompt(
   sourceLang: string,
@@ -20,175 +37,103 @@ function buildSystemPrompt(
   );
 }
 
-function parseSSELine(
-  line: string,
-  accumulatedText: string,
-  onChunk: (chunk: TranslateResult) => void
-): { done: boolean; text: string } {
-  if (!line.startsWith("data: ")) {
-    return { done: false, text: accumulatedText };
-  }
+function appendPath(baseEndpoint: string, path: string): string {
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${normalizeOpenAIBaseUrl(baseEndpoint)}${normalizedPath}`;
+}
 
-  const data = line.slice(6);
-  if (data === "[DONE]") {
-    onChunk({ text: accumulatedText, finished: true });
-    return { done: true, text: accumulatedText };
-  }
+function getTextDelta(chunk: StreamChunk): string {
+  return chunk.type === TEXT_CONTENT_EVENT ? (chunk.delta ?? "") : "";
+}
 
-  try {
-    const parsed = JSON.parse(data) as {
-      choices: Array<{ delta: { content?: string } }>;
-    };
-    const content = parsed.choices[0]?.delta?.content || "";
-    const newText = accumulatedText + content;
-    onChunk({ text: newText, finished: false });
-    return { done: false, text: newText };
-  } catch {
-    return { done: false, text: accumulatedText };
-  }
+function normalizeOpenAIBaseUrl(endpoint: string): string {
+  return endpoint
+    .trim()
+    .replace(TRAILING_SLASHES_RE, "")
+    .replace(OPENAI_PATH_SUFFIX_RE, "");
+}
+
+function resolveApiMode(config: TranslateConfig): OpenAIApiMode {
+  return config.apiMode ?? DEFAULT_API_MODE;
+}
+
+function toModelIds(data: ModelListResponse): string[] {
+  return (data.data ?? [])
+    .map((model) => model.id)
+    .filter((model): model is string => Boolean(model));
 }
 
 export class OpenAITranslateProvider
   implements IProvider<TranslateConfig, TranslateOptions, TranslateResult>
 {
-  readonly name = "openai";
+  readonly name: string;
   readonly type = "translate" as const;
 
+  protected readonly defaultEndpoint?: string;
+  protected readonly errorLabel: string;
+  protected readonly requiresApiKey: boolean;
+
+  constructor(options?: OpenAITranslateProviderOptions) {
+    this.name = options?.name ?? "openai";
+    this.defaultEndpoint =
+      options?.defaultEndpoint ?? "https://api.openai.com/v1";
+    this.errorLabel = options?.errorLabel ?? "OpenAI";
+    this.requiresApiKey = options?.requiresApiKey ?? true;
+  }
+
   validateConfig(config: TranslateConfig): Promise<boolean> {
-    return Promise.resolve(!!(config.apiKey && config.apiEndpoint));
+    return Promise.resolve(
+      this.validateApiAccess(config) && Boolean(config.model)
+    );
   }
 
   async execute(
     config: TranslateConfig,
     options: TranslateOptions
   ): Promise<TranslateResult> {
-    const { text, sourceLang, targetLang } = options;
-    const {
-      apiKey,
-      apiEndpoint,
-      model,
-      sourceLang: configSourceLang,
-      targetLang: configTargetLang,
-      promptTemplate,
-      temperature,
-      maxTokens,
-    } = config;
-
-    const finalSourceLang = sourceLang || configSourceLang;
-    const finalTargetLang = targetLang || configTargetLang;
-
-    const systemPrompt = buildSystemPrompt(
-      finalSourceLang,
-      finalTargetLang,
-      promptTemplate
-    );
-    const response = await fetch(`${apiEndpoint}/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: text },
-        ],
-        temperature,
-        max_tokens: maxTokens,
-      }),
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`OpenAI API error: ${response.status} - ${error}`);
-    }
-
-    const data = (await response.json()) as {
-      choices: Array<{ message: { content: string } }>;
-    };
-
     return {
-      text: data.choices[0]?.message?.content || "",
+      text: await streamToText(this.createTranslateStream(config, options)),
       finished: true,
     };
   }
 
-  async executeStream?(
+  async executeStream(
     config: TranslateConfig,
     options: TranslateOptions,
     onChunk: (chunk: TranslateResult) => void
   ): Promise<void> {
-    const { text, sourceLang, targetLang } = options;
-    const {
-      apiKey,
-      apiEndpoint,
-      model,
-      sourceLang: configSourceLang,
-      targetLang: configTargetLang,
-      promptTemplate,
-      temperature,
-      maxTokens,
-    } = config;
+    let accumulatedText = "";
 
-    const finalSourceLang = sourceLang || configSourceLang;
-    const finalTargetLang = targetLang || configTargetLang;
+    for await (const chunk of this.createTranslateStream(config, options)) {
+      const delta = getTextDelta(chunk);
+      if (!delta) {
+        continue;
+      }
 
-    const systemPrompt = buildSystemPrompt(
-      finalSourceLang,
-      finalTargetLang,
-      promptTemplate
-    );
-    const response = await fetch(`${apiEndpoint}/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: text },
-        ],
-        temperature,
-        max_tokens: maxTokens,
-        stream: true,
-      }),
+      accumulatedText += delta;
+      onChunk({ text: accumulatedText, finished: false });
+    }
+
+    onChunk({ text: accumulatedText, finished: true });
+  }
+
+  async listModels(config: TranslateConfig): Promise<string[]> {
+    if (!this.validateApiAccess(config)) {
+      throw new Error(`${this.errorLabel} API endpoint or API key is missing`);
+    }
+
+    const response = await tauriFetch(this.resolveModelsUrl(config), {
+      headers: this.resolveAuthHeaders(config),
     });
 
     if (!response.ok) {
       const error = await response.text();
-      throw new Error(`OpenAI API error: ${response.status} - ${error}`);
+      throw new Error(
+        `${this.errorLabel} models API error: ${response.status} - ${error}`
+      );
     }
 
-    const reader = response.body?.getReader();
-    if (!reader) {
-      throw new Error("No response body");
-    }
-
-    const decoder = new TextDecoder();
-    let accumulatedText = "";
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) {
-        break;
-      }
-
-      const chunk = decoder.decode(value, { stream: true });
-      const lines = chunk.split("\n").filter((line) => line.trim() !== "");
-
-      for (const line of lines) {
-        const result = parseSSELine(line, accumulatedText, onChunk);
-        accumulatedText = result.text;
-        if (result.done) {
-          return;
-        }
-      }
-    }
-
-    onChunk({ text: accumulatedText, finished: true });
+    return toModelIds((await response.json()) as ModelListResponse);
   }
 
   getCapabilities(): ServiceCapability {
@@ -206,7 +151,82 @@ export class OpenAITranslateProvider
         "es",
         "ru",
       ],
-      models: ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"],
     };
+  }
+
+  protected resolveApiEndpoint(config: TranslateConfig): string {
+    const endpoint = config.apiEndpoint || this.defaultEndpoint || "";
+    return endpoint ? normalizeOpenAIBaseUrl(endpoint) : "";
+  }
+
+  protected validateApiAccess(config: TranslateConfig): boolean {
+    const requiresApiKey = config.requiresApiKey ?? this.requiresApiKey;
+    return Boolean(
+      this.resolveApiEndpoint(config) && (!requiresApiKey || config.apiKey)
+    );
+  }
+
+  private buildModelOptions(config: TranslateConfig): Record<string, unknown> {
+    const apiMode = resolveApiMode(config);
+    return {
+      ...(typeof config.temperature === "number" && {
+        temperature: config.temperature,
+      }),
+      ...(typeof config.maxTokens === "number" &&
+        (apiMode === "responses"
+          ? { max_output_tokens: config.maxTokens }
+          : { max_tokens: config.maxTokens })),
+    };
+  }
+
+  private createTranslateStream(
+    config: TranslateConfig,
+    options: TranslateOptions
+  ): AsyncIterable<StreamChunk> {
+    const { model } = config;
+    if (!model) {
+      throw new Error(`${this.errorLabel} model is required`);
+    }
+
+    const adapter = openaiCompatibleText(model, {
+      name: this.name,
+      api:
+        resolveApiMode(config) === "responses"
+          ? "responses"
+          : "chat-completions",
+      baseURL: this.resolveApiEndpointOrThrow(config),
+      apiKey: config.apiKey || BROWSER_API_KEY_PLACEHOLDER,
+      dangerouslyAllowBrowser: true,
+      fetch: tauriFetch as typeof globalThis.fetch,
+    });
+
+    return chat({
+      adapter,
+      messages: [{ role: "user", content: options.text }],
+      modelOptions: this.buildModelOptions(config),
+      systemPrompts: [
+        buildSystemPrompt(
+          options.sourceLang || config.sourceLang,
+          options.targetLang || config.targetLang,
+          config.promptTemplate
+        ),
+      ],
+    });
+  }
+
+  private resolveApiEndpointOrThrow(config: TranslateConfig): string {
+    const endpoint = this.resolveApiEndpoint(config);
+    if (!endpoint) {
+      throw new Error(`${this.errorLabel} API endpoint is required`);
+    }
+    return endpoint;
+  }
+
+  private resolveAuthHeaders(config: TranslateConfig): HeadersInit {
+    return config.apiKey ? { Authorization: `Bearer ${config.apiKey}` } : {};
+  }
+
+  private resolveModelsUrl(config: TranslateConfig): string {
+    return appendPath(this.resolveApiEndpointOrThrow(config), "/models");
   }
 }

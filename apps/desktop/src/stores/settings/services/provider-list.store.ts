@@ -63,6 +63,7 @@ export function normalizeProviderConfigs<TProvider extends string>(
       ...definition.getDefaultProviderConfig(provider.provider),
       ...provider,
       isCollapsed: provider.isCollapsed ?? false,
+      enabled: provider.enabled ?? true,
     });
     seen.add(provider.provider);
   }
@@ -74,15 +75,39 @@ export function createDefaultServiceConfig<TProvider extends string>(
   definition: ServiceDefinition<TProvider>
 ): ServiceConfig<TProvider> {
   const providerOrder = normalizeProviderOrder(undefined, definition);
-  const providers = providerOrder
-    .filter((provider) => !definition.getProviderMeta(provider)?.requiresApiKey)
-    .map((provider) => definition.getDefaultProviderConfig(provider));
+  const providers = providerOrder.map((provider) => ({
+    ...definition.getDefaultProviderConfig(provider),
+    enabled: !definition.getProviderMeta(provider)?.requiresApiKey,
+  }));
 
   return {
-    activeProvider: providers[0]?.provider ?? definition.defaultProvider,
+    activeProvider:
+      providers.find((p) => p.enabled !== false)?.provider ??
+      definition.defaultProvider,
     providerOrder,
     providers,
   };
+}
+
+export function fillMissingProviders<TProvider extends string>(
+  providers: ProviderConfig<TProvider>[],
+  providerOrder: readonly TProvider[],
+  definition: ServiceDefinition<TProvider>
+): ProviderConfig<TProvider>[] {
+  const seen = new Set(providers.map((p) => p.provider));
+  const filled = [...providers];
+
+  for (const providerId of providerOrder) {
+    if (isKnownProvider(providerId, definition) && !seen.has(providerId)) {
+      filled.push({
+        ...definition.getDefaultProviderConfig(providerId),
+        enabled: false,
+      });
+      seen.add(providerId);
+    }
+  }
+
+  return filled;
 }
 
 export function migrateServiceConfig<TProvider extends string>(
@@ -95,15 +120,20 @@ export function migrateServiceConfig<TProvider extends string>(
   }
 
   const providers = normalizeProviderConfigs(saved.providers, definition);
+  const allProviders = fillMissingProviders(
+    providers,
+    saved.providerOrder ?? [],
+    definition
+  );
   const activeProvider = isKnownProvider(saved.activeProvider, definition)
     ? saved.activeProvider
     : defaults.activeProvider;
 
   return {
     activeProvider,
-    providers,
+    providers: allProviders,
     providerOrder: normalizeProviderOrder(
-      [...(saved.providerOrder ?? []), ...providers.map((p) => p.provider)],
+      [...(saved.providerOrder ?? []), ...allProviders.map((p) => p.provider)],
       definition
     ),
   };

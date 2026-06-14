@@ -1,4 +1,5 @@
 import type { JSX } from "solid-js";
+import { toast } from "solid-sonner";
 import { useI18n } from "@/i18n";
 import type {
   ProviderConfig,
@@ -35,8 +36,12 @@ export const ServiceProviderSettings = <
     props.config.providers.find(
       (provider) => provider.provider === selectedProvider()
     );
+  const isProviderEnabled = () => currentProviderConfig()?.enabled !== false;
 
-  const updateProviderConfig = (
+  const canCreateCustomProvider = () =>
+    typeof props.definition.createCustomProviderId === "function";
+
+  const updateProviderConfig = async (
     updates: Partial<ProviderConfig<TProvider>>
   ) => {
     const providers = props.config.providers.map((provider) =>
@@ -45,36 +50,71 @@ export const ServiceProviderSettings = <
         : provider
     );
 
-    props.actions.update({ providers });
+    await props.actions.update({ providers });
+  };
+
+  const addCustomProviderConfig = () => {
+    const providerId = props.definition.createCustomProviderId?.();
+    if (!providerId) {
+      return;
+    }
+
+    const providers = [
+      ...props.config.providers,
+      {
+        ...props.definition.getDefaultProviderConfig(providerId),
+        enabled: true,
+      },
+    ];
+    const providerOrder = [...props.config.providerOrder, providerId];
+
+    props.actions.update({
+      activeProvider: providerId,
+      providers,
+      providerOrder,
+    });
+
+    toast.success(t("global.operationSuccess"));
+  };
+
+  const deleteProviderConfig = () => {
+    const deletingProvider = selectedProvider();
+    const providers = props.config.providers.filter(
+      (provider) => provider.provider !== deletingProvider
+    );
+
+    // Switch active provider to the first remaining one, or keep current if none left
+    const nextActive =
+      providers[0]?.provider ?? props.definition.defaultProvider;
+    // Remove from provider order too
+    const providerOrder = props.config.providerOrder.filter(
+      (id) => id !== deletingProvider
+    );
+
+    props.actions.update({
+      providers,
+      activeProvider: nextActive,
+      providerOrder,
+    });
   };
 
   return (
     <div class="flex h-full min-h-0 overflow-hidden">
       <ProviderSidebar
         actions={props.actions}
+        canAddCustomProvider={canCreateCustomProvider()}
         config={props.config}
         getDefaultProviderConfig={props.definition.getDefaultProviderConfig}
         getProviderMeta={props.definition.getProviderMeta}
-        searchPlaceholder={t("settings.service.providerSearchPlaceholder")}
+        onAddCustomProvider={addCustomProviderConfig}
         serviceTabs={props.serviceTabs}
       />
       <ProviderConfigPanel
-        labels={{
-          apiConfig: t("settings.service.providerConfig.apiConfig"),
-          apiKey: t("settings.service.providerConfig.apiKey"),
-          apiEndpoint: t("settings.service.providerConfig.apiEndpoint"),
-          model: t("settings.service.providerConfig.model"),
-          advancedConfig: t("settings.service.providerConfig.advancedConfig"),
-          promptTemplate: t("settings.service.providerConfig.promptTemplate"),
-          promptTemplatePlaceholder: t(
-            "settings.service.providerConfig.promptTemplatePlaceholder"
-          ),
-          promptTemplateDesc: t(
-            "settings.service.providerConfig.promptTemplateDesc"
-          ),
-          temperature: t("settings.service.providerConfig.temperature"),
-          temperatureDesc: t("settings.service.providerConfig.temperatureDesc"),
-        }}
+        deleteProviderConfig={deleteProviderConfig}
+        isCustomProvider={
+          props.definition.isCustomProvider?.(selectedProvider()) ?? false
+        }
+        isEnabled={isProviderEnabled()}
         meta={providerMeta()}
         providerConfig={currentProviderConfig()}
         updateProviderConfig={updateProviderConfig}

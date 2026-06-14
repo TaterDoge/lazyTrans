@@ -14,14 +14,16 @@ const PROVIDER_SEARCH_ALIASES: Record<string, string[]> = {
 
 export function createProviderSearchItems<TProvider extends string>(
   providerIds: readonly TProvider[],
-  getMeta: (providerId: TProvider) => ProviderMeta | undefined
+  getMeta: (providerId: TProvider) => ProviderMeta | undefined,
+  getDisplayName?: (providerId: TProvider) => string | undefined
 ): ProviderSearchItem<TProvider>[] {
   return providerIds.map((providerId) => {
     const meta = getMeta(providerId);
-    const name = meta?.name ?? "";
+    const defaultName = meta?.name ?? "";
+    const name = getDisplayName?.(providerId)?.trim() || defaultName;
 
     return {
-      aliases: PROVIDER_SEARCH_ALIASES[name] ?? [],
+      aliases: PROVIDER_SEARCH_ALIASES[defaultName] ?? [],
       description: meta?.description ?? "",
       name,
       providerId,

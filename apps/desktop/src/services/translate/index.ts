@@ -4,6 +4,7 @@ import type {
   TranslateResult,
 } from "@/services/translate-core";
 import {
+  listTranslateModels as executeListTranslateModels,
   translate as executeTranslate,
   translateStream as executeTranslateStream,
 } from "@/services/translate-core";
@@ -23,7 +24,7 @@ function resolveRuntimeConfig(
     return config;
   }
 
-  return { ...config, provider: "custom" };
+  return { ...config, provider: "openai" };
 }
 
 export function translate(
@@ -39,4 +40,10 @@ export function translateStream(
   onChunk: (result: TranslateResult) => void
 ): Promise<void> {
   return executeTranslateStream(resolveRuntimeConfig(config), options, onChunk);
+}
+
+export function listTranslateModels(
+  config: CoreTranslateConfig
+): Promise<string[]> {
+  return executeListTranslateModels(resolveRuntimeConfig(config));
 }
