@@ -1,13 +1,20 @@
-import { LogicalPosition, LogicalSize } from "@tauri-apps/api/dpi";
+import { PhysicalPosition, PhysicalSize } from "@tauri-apps/api/dpi";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { currentMonitor } from "@tauri-apps/api/window";
+import { currentMonitor, monitorFromPoint } from "@tauri-apps/api/window";
 import { onCleanup, onMount } from "solid-js";
 import { WINDOW_CONFIG, type WindowLabel } from "../config/window.config";
+import {
+  type Rect,
+  resolveResizedWindowPosition,
+  toIntegerPoint,
+  type WindowPositionMode,
+} from "../lib/utils/window-position";
 
 type UseAutoWindowHeightOptions = {
   getContainer: () => HTMLElement | null;
   getContentHeight?: () => number | null | undefined;
   getObservedElements?: () => Array<HTMLElement | null | undefined>;
+  getPositionMode?: () => WindowPositionMode | Promise<WindowPositionMode>;
   maxHeightRatio?: number;
 };
 
@@ -17,23 +24,6 @@ function resolveWindowWidth(label: string, fallbackWidth: number) {
   }
 
   return fallbackWidth;
-}
-
-function resolveWindowY(
-  currentY: number,
-  targetHeight: number,
-  workAreaTop: number,
-  workAreaBottom: number
-) {
-  if (currentY < workAreaTop) {
-    return workAreaTop;
-  }
-
-  if (currentY + targetHeight > workAreaBottom) {
-    return workAreaBottom - targetHeight;
-  }
-
-  return currentY;
 }
 
 function resolveContentHeight(
@@ -52,20 +42,54 @@ function resolveContentHeight(
   return Math.ceil(container.scrollHeight);
 }
 
+function resolveMaxInnerHeight(
+  workArea: Rect,
+  chromeHeight: number,
+  maxHeightRatio: number
+) {
+  const normalizedRatio = Number.isFinite(maxHeightRatio)
+    ? Math.max(0, maxHeightRatio)
+    : 1;
+  const maxHeightByRatio = Math.floor(workArea.height * normalizedRatio);
+  const maxHeightByWorkArea = workArea.height - chromeHeight;
+
+  return Math.max(1, Math.min(maxHeightByRatio, maxHeightByWorkArea));
+}
+
+function getWorkArea(monitor: Awaited<ReturnType<typeof currentMonitor>>) {
+  if (!monitor) {
+    return null;
+  }
+
+  return {
+    x: monitor.workArea.position.x,
+    y: monitor.workArea.position.y,
+    width: monitor.workArea.size.width,
+    height: monitor.workArea.size.height,
+  } satisfies Rect;
+}
+
+async function resolveWorkAreaForWindow(position: { x: number; y: number }) {
+  const monitor =
+    (await monitorFromPoint(position.x, position.y).catch(() => null)) ??
+    (await currentMonitor().catch(() => null));
+
+  return getWorkArea(monitor);
+}
+
 export function useAutoWindowHeight({
   getContainer,
   getContentHeight,
   getObservedElements,
+  getPositionMode,
   maxHeightRatio = 0.5,
 }: UseAutoWindowHeightOptions) {
   const currentWindow = getCurrentWebviewWindow();
   onMount(() => {
     let disposed = false;
-    let maxHeight = Number.POSITIVE_INFINITY;
-    let workAreaTop = Number.NEGATIVE_INFINITY;
-    let workAreaBottom = Number.POSITIVE_INFINITY;
     let syncing = false;
     let syncPending = false;
+    let observer: ResizeObserver | null = null;
 
     const syncWindowHeight = async () => {
       if (syncing) {
@@ -81,34 +105,76 @@ export function useAutoWindowHeight({
           return;
         }
 
-        const contentHeight = resolveContentHeight(container, getContentHeight);
-        const size = await currentWindow.innerSize();
+        const scaleFactor = await currentWindow.scaleFactor();
+        const innerSize = await currentWindow.innerSize();
+        const outerSize = await currentWindow.outerSize();
         const position = await currentWindow.outerPosition();
-        const targetWidth = resolveWindowWidth(currentWindow.label, size.width);
+        const workArea = await resolveWorkAreaForWindow(position);
 
-        const maxVisibleHeight = Math.max(0, workAreaBottom - workAreaTop);
-        const targetHeight = Math.min(
-          contentHeight,
-          maxHeight,
-          maxVisibleHeight
+        if (!workArea) {
+          return;
+        }
+
+        const contentHeight = resolveContentHeight(container, getContentHeight);
+        const targetWidth = resolveWindowWidth(
+          currentWindow.label,
+          innerSize.width / scaleFactor
+        );
+        const targetInnerWidth = Math.max(
+          1,
+          Math.round(targetWidth * scaleFactor)
+        );
+        const targetContentHeight = Math.max(
+          1,
+          Math.ceil(contentHeight * scaleFactor)
+        );
+        const chromeHeight = Math.max(0, outerSize.height - innerSize.height);
+        const targetMaxInnerHeight = resolveMaxInnerHeight(
+          workArea,
+          chromeHeight,
+          maxHeightRatio
+        );
+        const targetInnerHeight = Math.min(
+          targetContentHeight,
+          targetMaxInnerHeight
+        );
+        const targetOuterSize = {
+          width:
+            targetInnerWidth + Math.max(0, outerSize.width - innerSize.width),
+          height: targetInnerHeight + chromeHeight,
+        };
+        const positionMode = (await getPositionMode?.()) ?? "mouse";
+        const targetPosition = toIntegerPoint(
+          resolveResizedWindowPosition(
+            positionMode,
+            position,
+            targetOuterSize,
+            workArea
+          )
         );
 
-        const targetY = resolveWindowY(
-          position.y,
-          targetHeight,
-          workAreaTop,
-          workAreaBottom
-        );
+        await currentWindow.setSizeConstraints({
+          maxHeight: Math.max(
+            1,
+            Math.floor(targetMaxInnerHeight / scaleFactor)
+          ),
+        });
 
-        if (targetY !== position.y) {
-          await currentWindow.setPosition(
-            new LogicalPosition(position.x, targetY)
+        const shouldResize =
+          innerSize.width !== targetInnerWidth ||
+          innerSize.height !== targetInnerHeight;
+        const shouldReposition =
+          targetPosition.x !== position.x || targetPosition.y !== position.y;
+
+        if (shouldResize) {
+          await currentWindow.setSize(
+            new PhysicalSize(targetInnerWidth, targetInnerHeight)
           );
         }
 
-        if (size.height !== targetHeight) {
-          await currentWindow.setSize(
-            new LogicalSize(targetWidth, targetHeight)
+        if (shouldReposition || shouldResize) {
+          await currentWindow.setPosition(
+            new PhysicalPosition(targetPosition.x, targetPosition.y)
           );
         }
       } finally {
@@ -129,36 +195,27 @@ export function useAutoWindowHeight({
       });
     };
 
-    const observer = new ResizeObserver(() => {
-      scheduleWindowHeightSync();
-    });
-
-    const container = getContainer();
-    const observedElements = [container, ...(getObservedElements?.() ?? [])];
-    for (const element of observedElements) {
-      if (element) {
-        observer.observe(element);
-      }
-    }
-
-    currentMonitor()
-      .then((monitor) => {
-        if (disposed || !monitor) {
-          return;
-        }
-
-        workAreaTop = monitor.workArea.position.y;
-        workAreaBottom = workAreaTop + monitor.workArea.size.height;
-        maxHeight = Math.floor(monitor.workArea.size.height * maxHeightRatio);
-        return currentWindow.setSizeConstraints({ maxHeight });
-      })
-      .finally(() => {
+    const observeElements = () => {
+      observer?.disconnect();
+      observer = new ResizeObserver(() => {
         scheduleWindowHeightSync();
       });
 
+      const container = getContainer();
+      const observedElements = [container, ...(getObservedElements?.() ?? [])];
+      for (const element of observedElements) {
+        if (element) {
+          observer.observe(element);
+        }
+      }
+    };
+
+    observeElements();
+    scheduleWindowHeightSync();
+
     onCleanup(() => {
       disposed = true;
-      observer.disconnect();
+      observer?.disconnect();
     });
   });
 }

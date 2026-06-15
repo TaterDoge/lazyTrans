@@ -11,7 +11,11 @@ import {
 } from "../../../../stores/settings/general.store";
 import { SelectControl, SwitchControl } from "../../components/controls";
 import type { SettingGroup } from "./config";
-import { LANGUAGE_OPTIONS, THEME_OPTIONS } from "./config";
+import {
+  LANGUAGE_OPTIONS,
+  THEME_OPTIONS,
+  TRANSLATOR_WINDOW_POSITION_OPTIONS,
+} from "./config";
 
 export const generalSettingGroups: SettingGroup[] = [
   {
@@ -45,6 +49,24 @@ export const generalSettingGroups: SettingGroup[] = [
             onChange={(val) => generalActions.update({ theme: val })}
             options={THEME_OPTIONS}
             value={() => generalStore.theme}
+          />
+        ),
+      },
+    ],
+  },
+  {
+    titleKey: "settings.general.windowControl",
+    items: [
+      {
+        key: "translatorWindowPosition",
+        labelKey: "settings.general.translatorWindowPosition",
+        control: () => (
+          <SelectControl
+            onChange={(val) =>
+              generalActions.update({ translatorWindowPosition: val })
+            }
+            options={TRANSLATOR_WINDOW_POSITION_OPTIONS}
+            value={() => generalStore.translatorWindowPosition}
           />
         ),
       },

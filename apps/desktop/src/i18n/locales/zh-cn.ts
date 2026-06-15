@@ -35,6 +35,10 @@ export const dict = {
       themeSystem: "系统",
       themeLight: "亮色",
       themeDark: "暗色",
+      windowControl: "窗口控制",
+      translatorWindowPosition: "翻译窗口出现位置",
+      windowPositionMouse: "鼠标位置",
+      windowPositionCenter: "屏幕居中",
     },
     service: {
       title: "服务设置",

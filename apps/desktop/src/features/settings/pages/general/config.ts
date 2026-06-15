@@ -41,3 +41,20 @@ export const THEME_OPTIONS: SelectOption<GeneralSettings["theme"]>[] = [
     icon: "icon-[line-md--moon-rising-alt-loop]",
   },
 ];
+
+// ─── 窗口位置选项 ────────────────────────────────────────────────────────────
+
+export const TRANSLATOR_WINDOW_POSITION_OPTIONS: SelectOption<
+  GeneralSettings["translatorWindowPosition"]
+>[] = [
+  {
+    value: "mouse",
+    labelKey: "settings.general.windowPositionMouse",
+    icon: "icon-[tabler--pointer]",
+  },
+  {
+    value: "center",
+    labelKey: "settings.general.windowPositionCenter",
+    icon: "icon-[tabler--focus-centered]",
+  },
+];

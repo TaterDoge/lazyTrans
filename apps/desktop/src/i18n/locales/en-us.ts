@@ -35,6 +35,10 @@ export const dict = {
       themeSystem: "System",
       themeLight: "Light",
       themeDark: "Dark",
+      windowControl: "Window Control",
+      translatorWindowPosition: "Translator window position",
+      windowPositionMouse: "Mouse position",
+      windowPositionCenter: "Screen center",
     },
     service: {
       title: "Service Settings",
