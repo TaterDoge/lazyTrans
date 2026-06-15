@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import {
   hideAllWindows,
+  getTranslatorWindowPlacementMode,
   hideWindow,
   setAlwaysOnTop,
   showWindow,
@@ -40,7 +41,8 @@ function Translator() {
         ? rootRef.scrollHeight + scrollRef.scrollHeight - scrollRef.clientHeight
         : undefined,
     getObservedElements: () => [scrollRef, scrollContentRef],
-    maxHeightRatio: 0.9,
+    getPositionMode: getTranslatorWindowPlacementMode,
+    maxHeightRatio: 1,
   });
 
   const handleDragStart = (event: PointerEvent) => {

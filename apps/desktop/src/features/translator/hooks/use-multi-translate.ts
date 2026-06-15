@@ -15,12 +15,12 @@ import { initSettingsStore } from "@/stores/settings";
 import { translateConfig } from "@/stores/settings/services";
 import type { TranslateResultItem } from "../types";
 
-type TranslateFn = typeof import("@/services/translate").translate;
+type TranslateStreamFn = typeof import("@/services/translate").translateStream;
 
 interface ProviderRuntimeState {
   error: string | null;
   loading: boolean;
-  resultLines: string[];
+  resultText: string;
   triggeredTextVersion: number | null;
 }
 
@@ -28,36 +28,33 @@ interface TranslationProviderSnapshot {
   apiEndpoint?: string;
   apiKey?: string;
   apiMode?: ProviderConfig["apiMode"];
-  maxTokens?: number;
   model?: string;
   promptTemplate?: string;
   provider: TranslateProvider;
   temperature?: number;
 }
 
-let cachedTranslateFn: TranslateFn | null = null;
-let pendingTranslateFn: Promise<TranslateFn> | null = null;
+let cachedTranslateStreamFn: TranslateStreamFn | null = null;
+let pendingTranslateStreamFn: Promise<TranslateStreamFn> | null = null;
 
-const LINE_BREAK_REGEX = /\r?\n+/;
-
-function getTranslateFn(): Promise<TranslateFn> {
-  if (cachedTranslateFn) {
-    return Promise.resolve(cachedTranslateFn);
+function getTranslateStreamFn(): Promise<TranslateStreamFn> {
+  if (cachedTranslateStreamFn) {
+    return Promise.resolve(cachedTranslateStreamFn);
   }
 
-  if (!pendingTranslateFn) {
-    pendingTranslateFn = import("@/services/translate")
+  if (!pendingTranslateStreamFn) {
+    pendingTranslateStreamFn = import("@/services/translate")
       .then((module) => {
-        cachedTranslateFn = module.translate;
-        return module.translate;
+        cachedTranslateStreamFn = module.translateStream;
+        return module.translateStream;
       })
       .catch((error) => {
-        pendingTranslateFn = null;
+        pendingTranslateStreamFn = null;
         throw error;
       });
   }
 
-  return pendingTranslateFn;
+  return pendingTranslateStreamFn;
 }
 
 function sortProviders(providers: ProviderConfig[]): ProviderConfig[] {
@@ -76,7 +73,7 @@ function createRuntimeState(): ProviderRuntimeState {
   return {
     error: null,
     loading: false,
-    resultLines: [],
+    resultText: "",
     triggeredTextVersion: null,
   };
 }
@@ -106,7 +103,6 @@ export function useMultiTranslate(text: Accessor<string>) {
       apiMode: config.apiMode,
       model: config.model,
       promptTemplate: config.promptTemplate,
-      maxTokens: config.maxTokens,
       temperature: config.temperature,
     }))
   );
@@ -123,16 +119,10 @@ export function useMultiTranslate(text: Accessor<string>) {
     });
   });
 
-  const normalizeResultLines = (resultText: string): string[] =>
-    resultText
-      .split(LINE_BREAK_REGEX)
-      .map((line) => line.trim())
-      .filter(Boolean);
-
   const ensureSettingsReady = async () => {
     if (!settingsReadyPromise) {
       settingsReadyPromise = Promise.all([
-        getTranslateFn(),
+        getTranslateStreamFn(),
         initSettingsStore(),
       ])
         .then(() => undefined)
@@ -185,8 +175,8 @@ export function useMultiTranslate(text: Accessor<string>) {
     }));
 
     try {
-      const translate = await getTranslateFn();
-      const result = await translate(
+      const translateStream = await getTranslateStreamFn();
+      await translateStream(
         {
           apiKey: config.apiKey,
           apiEndpoint: config.apiEndpoint,
@@ -195,7 +185,6 @@ export function useMultiTranslate(text: Accessor<string>) {
             ?.requiresApiKey,
           model: config.model,
           promptTemplate: config.promptTemplate,
-          maxTokens: config.maxTokens,
           temperature: config.temperature,
           provider: config.provider,
           sourceLang,
@@ -205,12 +194,22 @@ export function useMultiTranslate(text: Accessor<string>) {
           text: textSnapshot,
           sourceLang,
           targetLang,
+        },
+        (result) => {
+          updateProviderState(config.provider, requestVersion, (current) => ({
+            ...current,
+            resultText: result.text,
+            error: null,
+            loading: !result.finished,
+            triggeredTextVersion: result.finished
+              ? currentTextVersion
+              : current.triggeredTextVersion,
+          }));
         }
       );
 
       updateProviderState(config.provider, requestVersion, (current) => ({
         ...current,
-        resultLines: normalizeResultLines(result.text),
         error: null,
         loading: false,
         triggeredTextVersion: currentTextVersion,
@@ -218,7 +217,6 @@ export function useMultiTranslate(text: Accessor<string>) {
     } catch (error) {
       updateProviderState(config.provider, requestVersion, (current) => ({
         ...current,
-        resultLines: [],
         error: error instanceof Error ? error.message : "Translation failed",
         loading: false,
         triggeredTextVersion: currentTextVersion,
@@ -246,7 +244,7 @@ export function useMultiTranslate(text: Accessor<string>) {
         next.set(config.provider, {
           error: null,
           loading: config.isCollapsed !== true,
-          resultLines: [],
+          resultText: "",
           triggeredTextVersion: null,
         });
       }
@@ -369,7 +367,7 @@ export function useMultiTranslate(text: Accessor<string>) {
       const state = states.get(config.provider) ?? createRuntimeState();
       return {
         provider: config.provider,
-        resultLines: state.resultLines,
+        resultText: state.resultText,
         error: state.error,
         loading: state.loading,
         isCollapsed: config.isCollapsed === true,

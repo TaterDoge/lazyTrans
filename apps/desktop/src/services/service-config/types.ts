@@ -10,7 +10,6 @@ export interface ProviderConfig<TProvider extends string = string> {
   displayName?: string;
   enabled?: boolean;
   isCollapsed?: boolean;
-  maxTokens?: number;
   model?: string;
   promptTemplate?: string;
   provider: TProvider;
@@ -46,7 +45,6 @@ export function createDefaultProviderConfig<TProvider extends string>(
     model: meta?.supportedModels?.[0] ?? "",
     promptTemplate: "",
     temperature: 0.3,
-    maxTokens: 1024,
     isCollapsed: false,
     customModels: [],
     enabled: true,

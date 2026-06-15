@@ -11,7 +11,6 @@ export interface TranslateConfig {
   apiEndpoint?: string;
   apiKey?: string;
   apiMode?: OpenAIApiMode;
-  maxTokens?: number;
   model?: string;
   promptTemplate?: string;
   provider: string;

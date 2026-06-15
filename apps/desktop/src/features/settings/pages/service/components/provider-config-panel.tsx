@@ -360,7 +360,7 @@ export const ProviderConfigPanel = <TProvider extends string>(
     }
   };
 
-  const buildLocalTranslateConfig = (maxTokens = 16): CoreTranslateConfig => ({
+  const buildLocalTranslateConfig = (): CoreTranslateConfig => ({
     provider: props.providerConfig?.provider ?? "openai",
     apiKey: localApiKey(),
     apiEndpoint: localApiEndpoint(),
@@ -371,7 +371,6 @@ export const ProviderConfigPanel = <TProvider extends string>(
     temperature: localTemperature(),
     sourceLang: "en",
     targetLang: "zh-CN",
-    maxTokens,
   });
 
   /** Fetch models through the selected provider's own API contract. */
@@ -524,9 +523,9 @@ export const ProviderConfigPanel = <TProvider extends string>(
 
             <Show when={shouldShowModelConfig()}>
               <ConfigRow label={t("settings.service.providerConfig.model")}>
-                <div class="flex w-60 items-center gap-1">
+                <div class="flex w-60 min-w-0 items-center gap-1">
                   <Select
-                    class="flex-1"
+                    class="min-w-0 flex-1"
                     itemComponent={(itemProps) => (
                       <SelectItem item={itemProps.item}>
                         <span class="font-mono text-xs">
@@ -551,10 +550,10 @@ export const ProviderConfigPanel = <TProvider extends string>(
                       }
                     }
                   >
-                    <SelectTrigger class="h-8 flex-1">
+                    <SelectTrigger class="h-8 min-w-0 flex-1">
                       <SelectValue<{ value: string; label: string }>>
                         {(state) => (
-                          <span class="font-mono text-xs">
+                          <span class="block min-w-0 truncate font-mono text-xs">
                             {state.selectedOption()?.label}
                           </span>
                         )}

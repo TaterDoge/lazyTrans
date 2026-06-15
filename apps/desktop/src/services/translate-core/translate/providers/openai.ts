@@ -167,15 +167,10 @@ export class OpenAITranslateProvider
   }
 
   private buildModelOptions(config: TranslateConfig): Record<string, unknown> {
-    const apiMode = resolveApiMode(config);
     return {
       ...(typeof config.temperature === "number" && {
         temperature: config.temperature,
       }),
-      ...(typeof config.maxTokens === "number" &&
-        (apiMode === "responses"
-          ? { max_output_tokens: config.maxTokens }
-          : { max_tokens: config.maxTokens })),
     };
   }
 

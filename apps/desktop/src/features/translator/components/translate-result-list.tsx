@@ -122,7 +122,13 @@ export function TranslateResultList(props: TranslateResultListProps) {
                     </span>
                   </AccordionTrigger>
                   <AccordionContent class="px-2 pb-1">
-                    <Show when={item.loading}>
+                    <Show when={item.resultText.trim().length > 0}>
+                      <div class="whitespace-pre-wrap break-words text-sm leading-6">
+                        {item.resultText}
+                      </div>
+                    </Show>
+
+                    <Show when={item.loading && item.resultText.length === 0}>
                       <p class="text-muted-foreground text-sm">
                         {t("translator.translating")}
                       </p>
@@ -135,23 +141,9 @@ export function TranslateResultList(props: TranslateResultListProps) {
                     <Show
                       when={
                         !(item.loading || item.error) &&
-                        item.resultLines.length > 0
+                        item.resultText.trim().length === 0
                       }
                     >
-                      <ul class="list-disc space-y-1 pl-5 text-sm leading-6">
-                        <For each={item.resultLines}>
-                          {(line) => <li>{line}</li>}
-                        </For>
-                      </ul>
-                    </Show>
-
-                    <Show
-                      when={
-                        !(item.loading || item.error) &&
-                        item.resultLines.length === 0
-                      }
-                    >
-                      <p>{JSON.stringify(item, null, 2)}</p>
                       <p class="text-muted-foreground text-sm">
                         {t("translator.emptyResult")}
                       </p>

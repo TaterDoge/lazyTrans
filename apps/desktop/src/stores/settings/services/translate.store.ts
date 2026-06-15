@@ -38,7 +38,6 @@ interface LegacyTranslateConfig {
   apiKey?: string;
   apiMode?: ProviderConfig["apiMode"];
   enabledProviders?: TranslateProvider[];
-  maxTokens?: number;
   model?: string;
   promptTemplate?: string;
   provider?: TranslateProvider;
@@ -154,7 +153,6 @@ function migrateConfig(
         model: legacy.model ?? defaultConfig.model,
         promptTemplate: legacy.promptTemplate ?? "",
         temperature: legacy.temperature ?? 0.3,
-        maxTokens: legacy.maxTokens ?? 1024,
       };
     }
     return { ...defaultConfig, enabled: isEnabled };

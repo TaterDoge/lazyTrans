@@ -5,5 +5,5 @@ export interface TranslateResultItem {
   isCollapsed: boolean;
   loading: boolean;
   provider: TranslateProvider;
-  resultLines: string[];
+  resultText: string;
 }
